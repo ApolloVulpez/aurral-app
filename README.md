@@ -1,6 +1,25 @@
-# Aurral for Windows
+<div align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/readme-dark.svg" />
+    <img src="assets/readme-light.svg" width="690" alt="Aurral App" />
+  </picture>
+</div>
 
-A Windows desktop client for [Aurral](https://github.com/lklynet/aurral). It connects to an existing Aurral server.
+<p align="center">
+  <a href="https://github.com/ApolloVulpez/aurral-app/releases/latest"><img src="https://img.shields.io/github/v/release/ApolloVulpez/aurral-app?label=Windows%20release" alt="Latest Windows release" /></a>
+</p>
+
+<p align="center">A Windows desktop front end for your Aurral server.</p>
+
+<p align="center">
+  <a href="https://github.com/lklynet/aurral">Aurral project</a> ·
+  <a href="https://aurral.org/">Website</a> ·
+  <a href="https://docs.aurral.org/">Docs</a> ·
+  <a href="https://discord.gg/cpPYfgVURJ">Discord</a>
+</p>
+
+> [!IMPORTANT]
+> Aurral App requires a running Aurral server and displays that server's web interface. Report server bugs and issues you can also reproduce in a browser to the [main Aurral project](https://github.com/lklynet/aurral/issues). Report Windows installer, tray, and other desktop-only issues to the [Aurral App tracker](https://github.com/ApolloVulpez/aurral-app/issues).
 
 ## Install
 
