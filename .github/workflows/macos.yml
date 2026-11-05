@@ -1,0 +1,36 @@
+name: Build macOS DMG
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["macos/**", ".github/workflows/macos.yml", "LICENSE"]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: macos
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: "24"
+      - run: npm ci
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+      - run: npm run build
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: Aurral-App-macOS-universal
+          path: |
+            dist/macos/*.dmg
+            dist/macos/*.dmg.sha256
+          if-no-files-found: error
