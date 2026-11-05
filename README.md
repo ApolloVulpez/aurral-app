@@ -8,9 +8,10 @@
 <p align="center">
   <a href="https://github.com/ApolloVulpez/aurral-app/releases/latest"><img src="https://img.shields.io/github/v/release/ApolloVulpez/aurral-app?label=Windows%20release" alt="Latest Windows release" /></a>
   <a href="https://github.com/ApolloVulpez/aurral-app/releases/tag/v0.1.1"><img src="https://img.shields.io/badge/macOS-v0.1.1-84cc16" alt="macOS release" /></a>
+  <a href="https://github.com/ApolloVulpez/aurral-app/releases/tag/v0.1.3"><img src="https://img.shields.io/badge/Linux-v0.1.3-84cc16" alt="Linux release" /></a>
 </p>
 
-<p align="center">A Windows and macOS desktop front end for your Aurral server. (Linux support planned at a later date.)</p>
+<p align="center">A Windows, macOS, and Linux desktop front end for your Aurral server.</p>
 
 <p align="center">
   <a href="https://github.com/lklynet/aurral">Aurral project</a> ·
@@ -34,12 +35,19 @@ The installer includes .NET and installs the Microsoft Edge WebView2 Runtime if 
 
 Download the DMG for [Apple Silicon](https://github.com/ApolloVulpez/aurral-app/releases/download/v0.1.1/Aurral-App-0.1.1-macOS-arm64.dmg) or [Intel](https://github.com/ApolloVulpez/aurral-app/releases/download/v0.1.1/Aurral-App-0.1.1-macOS-x64.dmg). Open the disk image and drag **Aurral App** into **Applications**. These builds require macOS 13 or later. They are not Apple-notarized, so macOS may block the first launch.
 
+### Linux
+
+Download the x64 [Debian package](https://github.com/ApolloVulpez/aurral-app/releases/download/v0.1.3/Aurral-App-0.1.3-linux-amd64.deb) for Ubuntu, Debian, and Linux Mint, or the [AppImage](https://github.com/ApolloVulpez/aurral-app/releases/download/v0.1.3/Aurral-App-0.1.3-linux-x86_64.AppImage) for Fedora, SteamOS, and Bazzite.
+
+Install the `.deb` through your software installer. For the AppImage, allow the file to run as a program in its properties, then open it. Start in Desktop Mode on SteamOS and Bazzite. See the [Linux guide](linux/README.md) for installation commands and desktop integration.
+
 ## Connect and use Aurral
 
 On first launch, enter the URL of a running Aurral server, including its path if it lives under a subpath (for example, `https://music.example.com/aurral`). Then sign in through the Aurral screen that opens in the window. The app remembers the last server it opened and keeps you signed in across launches until you sign out or the server ends the session.
 
 - **On Windows**, tap **Alt** and choose **Settings → Change server** to switch servers. Right-click the Aurral icon in the notification area to open the tray menu. To make **X** exit the app, turn off **Settings → Minimize to tray**.
 - **On macOS**, press **⌘ + ,** or choose **Aurral App → Change Server** to switch servers. Click the Aurral icon near the clock in the macOS menu bar to open the playback menu. To make closing the window exit the app, turn off **Aurral App → Minimize to Tray**.
+- **On Linux**, press **Ctrl + ,** to change servers, or tap **Alt** and open **Settings**. Use the Aurral tray icon for playback controls. Turn off **Settings → Minimize to Tray** to make closing the window quit. If your desktop hides the tray icon, launching Aurral App again restores the existing window.
 
 Closing the window keeps playback running by default. The tray or menu-bar icon offers **Show Aurral**, **Stop / Play**, **Previous**, **Next**, and **Quit**. **Stop** pauses the current track so **Play** can resume it. Sign-in, API calls, and streaming go directly to your server.
 
@@ -80,3 +88,15 @@ npm start
 ```
 
 Use `npm run build` from the same directory to create a universal DMG in `dist/macos` at the repository root.
+
+### Linux
+
+Install Node.js 24 on Linux, then run these commands from the repository root.
+
+```sh
+cd linux
+npm ci
+npm run build
+```
+
+The build creates both the `.deb` and AppImage in `dist/linux`.

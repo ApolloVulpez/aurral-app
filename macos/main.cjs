@@ -4,6 +4,8 @@ const path = require("node:path");
 
 const setupFile = path.join(__dirname, "setup.html");
 const connectTimeoutMs = 15_000;
+const isLinux = process.platform === "linux";
+const windowIcon = isLinux ? path.join(__dirname, "assets", "icon.png") : undefined;
 let settings;
 let settingsFile;
 let player;
@@ -11,6 +13,9 @@ let setup;
 let tray;
 let quitting = false;
 let opening = false;
+let trayRefresh;
+let refreshingTray = false;
+let lastTrayState;
 
 function parseServer(address) {
   if (typeof address !== "string") return null;
@@ -68,6 +73,8 @@ function openSetup() {
     parent: player ?? undefined,
     modal: Boolean(player),
     backgroundColor: "#11141b",
+    icon: windowIcon,
+    autoHideMenuBar: isLinux,
     webPreferences: { sandbox: true, contextIsolation: true, preload: path.join(__dirname, "setup-preload.cjs") },
   });
   setup = window;
@@ -141,6 +148,8 @@ async function openServer(server) {
       minWidth: 520,
       minHeight: 420,
       backgroundColor: "#11141b",
+      icon: windowIcon,
+      autoHideMenuBar: isLinux,
       show: false,
       webPreferences: {
         partition: "persist:aurral",
@@ -198,7 +207,11 @@ async function playback(command) {
 async function showTrayMenu() {
   const state = await playback("state");
   if (!tray || quitting) return;
-  tray.popUpContextMenu(Menu.buildFromTemplate([
+  tray.popUpContextMenu(buildTrayMenu(state));
+}
+
+function buildTrayMenu(state) {
+  return Menu.buildFromTemplate([
     { label: "Show Aurral", click: showAurral },
     { type: "separator" },
     { label: state?.playing ? "Stop" : "Play", enabled: Boolean(state?.canToggle), click: () => playback("toggle") },
@@ -206,16 +219,31 @@ async function showTrayMenu() {
     { label: "Next", enabled: Boolean(state?.canNext), click: () => playback("nexttrack") },
     { type: "separator" },
     { label: "Quit", role: "quit" },
-  ]));
+  ]);
+}
+
+async function refreshLinuxTray() {
+  if (refreshingTray || quitting) return;
+  refreshingTray = true;
+  try {
+    const state = await playback("state");
+    const signature = JSON.stringify(state);
+    if (tray && !quitting && signature !== lastTrayState) {
+      tray.setContextMenu(buildTrayMenu(state));
+      lastTrayState = signature;
+    }
+  } finally {
+    refreshingTray = false;
+  }
 }
 
 function setAppMenu() {
   Menu.setApplicationMenu(Menu.buildFromTemplate([
     {
-      label: "Aurral App",
+      label: isLinux ? "&Settings" : "Aurral App",
       submenu: [
         { label: "Show Aurral", click: showAurral },
-        { label: "Change Server…", accelerator: "Command+,", click: openSetup },
+        { label: "Change Server…", accelerator: "CommandOrControl+,", click: openSetup },
         { label: "Minimize to Tray", type: "checkbox", checked: settings.minimizeToTray, click: item => {
           settings.minimizeToTray = item.checked;
           saveSettings();
@@ -237,7 +265,10 @@ if (!app.requestSingleInstanceLock()) {
   app.on("window-all-closed", () => {
     if (!opening && settings?.minimizeToTray === false) app.quit();
   });
-  app.on("before-quit", () => { quitting = true; });
+  app.on("before-quit", () => {
+    quitting = true;
+    clearInterval(trayRefresh);
+  });
   app.whenReady().then(async () => {
     settingsFile = path.join(app.getPath("userData"), "settings.json");
     settings = readSettings();
@@ -253,10 +284,16 @@ if (!app.requestSingleInstanceLock()) {
     });
 
     setAppMenu();
-    tray = new Tray(path.join(__dirname, "assets", "TrayTemplate.png"));
+    tray = new Tray(path.join(__dirname, "assets", isLinux ? "icon.png" : "TrayTemplate.png"));
     tray.setToolTip("Aurral App");
-    tray.on("click", showTrayMenu);
-    tray.on("right-click", showTrayMenu);
+    if (isLinux) {
+      await refreshLinuxTray();
+      trayRefresh = setInterval(refreshLinuxTray, 1000);
+      trayRefresh.unref();
+    } else {
+      tray.on("click", showTrayMenu);
+      tray.on("right-click", showTrayMenu);
+    }
     const server = parseServer(settings.serverUrl);
     if ((!server || await openServer(server)) && !quitting) openSetup();
   }).catch(error => {

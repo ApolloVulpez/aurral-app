@@ -1,0 +1,11 @@
+{
+  "name": "aurral-linux-build",
+  "private": true,
+  "version": "0.1.3",
+  "scripts": {
+    "build": "node build.cjs"
+  },
+  "devDependencies": {
+    "electron-builder": "26.18.0"
+  }
+}
