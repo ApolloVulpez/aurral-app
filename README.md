@@ -7,9 +7,10 @@
 
 <p align="center">
   <a href="https://github.com/ApolloVulpez/aurral-app/releases/latest"><img src="https://img.shields.io/github/v/release/ApolloVulpez/aurral-app?label=Windows%20release" alt="Latest Windows release" /></a>
+  <a href="https://github.com/ApolloVulpez/aurral-app/releases/tag/v0.1.1"><img src="https://img.shields.io/badge/macOS-v0.1.1-84cc16" alt="macOS release" /></a>
 </p>
 
-<p align="center">A Windows desktop front end for your Aurral server. (Linux support planned at a later date.)</p>
+<p align="center">A Windows and macOS desktop front end for your Aurral server. (Linux support planned at a later date.)</p>
 
 <p align="center">
   <a href="https://github.com/lklynet/aurral">Aurral project</a> ·
@@ -19,23 +20,32 @@
 </p>
 
 > [!IMPORTANT]
-> Aurral App requires a running Aurral server and displays that server's web interface. Report server bugs and issues you can also reproduce in a browser to the [main Aurral project](https://github.com/lklynet/aurral/issues). Report Windows installer, tray, and other desktop-only issues to the [Aurral App tracker](https://github.com/ApolloVulpez/aurral-app/issues).
+> Aurral App requires a running Aurral server and displays that server's web interface. Report server bugs and issues you can also reproduce in a browser to the [main Aurral project](https://github.com/lklynet/aurral/issues). Report installation, tray, and other desktop-only issues to the [Aurral App tracker](https://github.com/ApolloVulpez/aurral-app/issues).
 
 ## Install
 
-Download and run the x64 installer from [GitHub Releases](https://github.com/ApolloVulpez/aurral-app/releases). The default install folder is `C:\Program Files\Aurral` and setup requires administrator approval. Setup creates a Start menu shortcut and offers a desktop shortcut. Select **Open Aurral** at the end of setup. To keep a shortcut on the taskbar, right-click Aurral's taskbar icon while the app is open and select **Pin to taskbar**.
+### Windows
+
+Download and run the [Windows x64 installer](https://github.com/ApolloVulpez/aurral-app/releases/latest). The default install folder is `C:\Program Files\Aurral` and setup requires administrator approval. Setup creates a Start menu shortcut and offers a desktop shortcut. Select **Open Aurral** at the end of setup. To keep a shortcut on the taskbar, right-click Aurral's taskbar icon while the app is open and select **Pin to taskbar**.
 
 The installer includes .NET and installs the Microsoft Edge WebView2 Runtime if it is missing. That runtime download requires an Internet connection.
 
+### macOS
+
+Download the DMG for [Apple Silicon](https://github.com/ApolloVulpez/aurral-app/releases/download/v0.1.1/Aurral-App-0.1.1-macOS-arm64.dmg) or [Intel](https://github.com/ApolloVulpez/aurral-app/releases/download/v0.1.1/Aurral-App-0.1.1-macOS-x64.dmg). Open the disk image and drag **Aurral App** into **Applications**. These builds require macOS 13 or later. They are not Apple-notarized, so macOS may block the first launch.
+
 ## Connect and use Aurral
 
-On first launch, enter the URL of a running Aurral server, including its path if it lives under a subpath (for example, `https://music.example.com/aurral`). Then sign in through the Aurral screen that opens in the window. The app remembers the last server it opened. Tap **Alt** to reveal the menu bar, then use **Settings → Change server** to switch servers or retry a connection.
+On first launch, enter the URL of a running Aurral server, including its path if it lives under a subpath (for example, `https://music.example.com/aurral`). Then sign in through the Aurral screen that opens in the window. The app remembers the last server it opened and keeps you signed in across launches until you sign out or the server ends the session.
 
-Closing the window with **X** keeps Aurral and its playback in the notification area. Right-click its tray icon for **Show Aurral**, **Stop / Play**, **Previous**, **Next**, and **Quit**. **Stop** pauses the current track so **Play** can resume it. To make **X** exit the app, tap **Alt** and turn off **Settings → Minimize to tray**.
+- **On Windows**, tap **Alt** and choose **Settings → Change server** to switch servers. Right-click the Aurral icon in the notification area to open the tray menu. To make **X** exit the app, turn off **Settings → Minimize to tray**.
+- **On macOS**, press **⌘ + ,** or choose **Aurral App → Change Server** to switch servers. Click the Aurral icon near the clock in the macOS menu bar to open the playback menu. To make closing the window exit the app, turn off **Aurral App → Minimize to Tray**.
 
-The window loads the frontend served by that Aurral instance. Sign-in, API calls, and streaming go directly to the server. The app uses a separate WebView2 profile in `%LOCALAPPDATA%\Aurral` to keep you signed in across launches until you sign out or the server ends the session.
+Closing the window keeps playback running by default. The tray or menu-bar icon offers **Show Aurral**, **Stop / Play**, **Previous**, **Next**, and **Quit**. **Stop** pauses the current track so **Play** can resume it. Sign-in, API calls, and streaming go directly to your server.
 
 ## Build and run
+
+### Windows
 
 Install the .NET 10 SDK and the [Microsoft Edge WebView2 Runtime](https://developer.microsoft.com/microsoft-edge/webview2/). From the repository root in PowerShell:
 
@@ -58,3 +68,15 @@ To build the installer, install [Inno Setup 6.7 or later](https://jrsoftware.org
 ```
 
 The installer is written to `dist\installer`.
+
+### macOS
+
+Install Node.js 24 and the Xcode command-line tools, then run these commands from the repository root.
+
+```sh
+cd macos
+npm ci
+npm start
+```
+
+Use `npm run build` from the same directory to create a universal DMG in `dist/macos` at the repository root.

@@ -1,0 +1,17 @@
+{
+  "name": "aurral-app",
+  "productName": "Aurral App",
+  "version": "0.1.1",
+  "private": true,
+  "description": "A desktop front end for your Aurral server.",
+  "license": "MIT",
+  "main": "main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "build": "bash build-dmg.sh"
+  },
+  "devDependencies": {
+    "@electron/packager": "20.3.0",
+    "electron": "45.2.3"
+  }
+}
