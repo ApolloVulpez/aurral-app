@@ -9,7 +9,7 @@
   <a href="https://github.com/ApolloVulpez/aurral-app/releases/latest"><img src="https://img.shields.io/github/v/release/ApolloVulpez/aurral-app?label=Windows%20release" alt="Latest Windows release" /></a>
 </p>
 
-<p align="center">A Windows desktop front end for your Aurral server.</p>
+<p align="center">A Windows desktop front end for your Aurral server. (Linux support planned at a later date.)</p>
 
 <p align="center">
   <a href="https://github.com/lklynet/aurral">Aurral project</a> ·
