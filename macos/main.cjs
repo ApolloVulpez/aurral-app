@@ -1,14 +1,18 @@
-const { app, BrowserWindow, dialog, ipcMain, Menu, session, Tray } = require("electron");
+const { app, BrowserWindow, dialog, ipcMain, Menu, session, shell, Tray, WebContentsView } = require("electron");
 const fs = require("node:fs");
 const path = require("node:path");
+const { checkForUpdate, installUpdate } = require("./updates.cjs");
 
 const setupFile = path.join(__dirname, "setup.html");
+const navigationFile = path.join(__dirname, "navigation.html");
+const navigationHeight = 36;
 const connectTimeoutMs = 15_000;
 const isLinux = process.platform === "linux";
 const windowIcon = isLinux ? path.join(__dirname, "assets", "icon.png") : undefined;
 let settings;
 let settingsFile;
 let player;
+let playerPage;
 let setup;
 let tray;
 let quitting = false;
@@ -16,6 +20,8 @@ let opening = false;
 let trayRefresh;
 let refreshingTray = false;
 let lastTrayState;
+let availableUpdate;
+let updateStatus = "";
 
 function parseServer(address) {
   if (typeof address !== "string") return null;
@@ -104,8 +110,142 @@ function allowBrowserNavigation(contents) {
   contents.on("did-create-window", child => allowBrowserNavigation(child.webContents));
 }
 
-function waitForServerPage(window, server, owner) {
-  const contents = window.webContents;
+function navigateHistory(page, direction) {
+  const history = page.navigationHistory;
+  if (direction === "back" && history.canGoBack()) history.goBack();
+  if (direction === "forward" && history.canGoForward()) history.goForward();
+}
+
+function sendUpdateStatus(contents = player?.webContents) {
+  if (!contents || contents.isDestroyed()) return;
+  contents.send("aurral:update-state", {
+    busy: Boolean(updateStatus),
+    available: Boolean(availableUpdate),
+    label: updateStatus || (availableUpdate ? `Update to Aurral App ${availableUpdate.version}` : "Check for app updates"),
+  });
+}
+
+function showUpdateMessage(message, detail, type = "info") {
+  const options = { type, title: "App updates", message, detail };
+  const window = setup ?? player;
+  return window && !window.isDestroyed() ? dialog.showMessageBox(window, options) : dialog.showMessageBox(options);
+}
+
+function currentAppImage() {
+  const { APPDIR, APPIMAGE } = process.env;
+  return isLinux && APPDIR && APPIMAGE && path.isAbsolute(APPDIR) && path.isAbsolute(APPIMAGE) &&
+    process.execPath.startsWith(APPDIR + path.sep) ? APPIMAGE : undefined;
+}
+
+function restartAfterUpdate(executable, appImage) {
+  if (appImage) {
+    const mount = process.env.APPDIR;
+    // AppRun prepends paths from this mount. They won't exist after the restart.
+    for (const key of ["LD_LIBRARY_PATH", "XDG_DATA_DIRS"]) {
+      const entries = (process.env[key] ?? "").split(":").filter(entry => entry &&
+        entry !== mount && !entry.startsWith(mount + path.sep));
+      if (entries.length) process.env[key] = entries.join(":");
+      else delete process.env[key];
+    }
+    for (const key of ["APPDIR", "APPIMAGE", "ARGV0", "OWD"]) delete process.env[key];
+    process.chdir(path.dirname(executable));
+  }
+  app.relaunch({ execPath: executable, args: [] });
+  app.quit();
+}
+
+async function checkForAppUpdate(install) {
+  if (updateStatus || quitting) return;
+  if (!app.isPackaged) {
+    if (install) await showUpdateMessage("App updates are available in packaged builds.");
+    return;
+  }
+
+  const appImage = currentAppImage();
+  const platform = process.platform;
+  updateStatus = "Checking for app updates…";
+  sendUpdateStatus();
+  try {
+    availableUpdate = await checkForUpdate({ version: app.getVersion(), platform, arch: process.arch, appImage });
+    if (!install || quitting) return;
+    if (!availableUpdate) {
+      await showUpdateMessage("Aurral App is up to date.");
+      return;
+    }
+
+    updateStatus = `Installing Aurral App ${availableUpdate.version}…`;
+    sendUpdateStatus();
+    const result = await installUpdate(availableUpdate, {
+      platform, executable: process.execPath, appImage, tempDirectory: app.getPath("temp"),
+    });
+    if (quitting) return;
+    if (result.executable) restartAfterUpdate(result.executable, appImage);
+    if (result.packageFile) {
+      if (appImage || await shell.openPath(result.packageFile)) shell.showItemInFolder(result.packageFile);
+      await showUpdateMessage(`Aurral App ${availableUpdate.version} downloaded.`, appImage
+        ? "Replace your current AppImage with the downloaded file."
+        : platform === "darwin"
+          ? "Open the downloaded disk image and drag Aurral App into Applications."
+          : "Open the downloaded package in your software installer to finish the update.");
+    }
+  } catch (error) {
+    if (install && !quitting) await showUpdateMessage("Aurral App couldn't finish the update.", error.message, "warning");
+  } finally {
+    updateStatus = "";
+    sendUpdateStatus();
+  }
+}
+
+function attachNavigation(window, view) {
+  const page = view.webContents;
+  const toolbar = window.webContents;
+  window.once("closed", () => {
+    if (!page.isDestroyed()) page.close();
+  });
+
+  window.contentView.addChildView(view);
+  view.setBackgroundColor("#11141b");
+  const resize = () => {
+    const [width, height] = window.getContentSize();
+    view.setBounds({ x: 0, y: navigationHeight, width, height: Math.max(0, height - navigationHeight) });
+  };
+  resize();
+  window.on("resize", resize);
+
+  toolbar.on("will-navigate", event => event.preventDefault());
+  toolbar.setWindowOpenHandler(() => ({ action: "deny" }));
+  const updateButtons = () => {
+    if (toolbar.isDestroyed() || page.isDestroyed()) return;
+    toolbar.send("aurral:history-state", {
+      back: page.navigationHistory.canGoBack(),
+      forward: page.navigationHistory.canGoForward(),
+    });
+  };
+  toolbar.on("did-finish-load", () => {
+    updateButtons();
+    sendUpdateStatus(toolbar);
+  });
+  page.on("did-navigate", updateButtons);
+  page.on("did-navigate-in-page", (_event, _url, isMainFrame) => {
+    if (isMainFrame) updateButtons();
+  });
+
+  const onInput = (event, input) => {
+    if (input.type !== "keyDown" || input.control || input.shift) return;
+    const modifier = isLinux ? input.alt && !input.meta : input.meta && !input.alt;
+    if (!modifier) return;
+    const backKey = isLinux ? "ArrowLeft" : "[";
+    const forwardKey = isLinux ? "ArrowRight" : "]";
+    if (input.key !== backKey && input.key !== forwardKey) return;
+
+    event.preventDefault();
+    if (!input.isAutoRepeat) navigateHistory(page, input.key === backKey ? "back" : "forward");
+  };
+  page.on("before-input-event", onInput);
+  toolbar.on("before-input-event", onInput);
+}
+
+function waitForServerPage(window, contents, server, owner) {
   return new Promise(resolve => {
     let finished = false;
     const finish = error => {
@@ -129,7 +269,7 @@ function waitForServerPage(window, server, owner) {
     window.once("closed", canceled);
     owner?.once("closed", canceled);
     // Show the window once the main page responds. Its assets can keep loading in the window.
-    window.loadURL(server.href).catch(error => {
+    contents.loadURL(server.href).catch(error => {
       const code = /^ERR_[A-Z0-9_]+$/.test(error.code) ? ` (${error.code})` : "";
       finish(`Aurral couldn't open the server${code}. Check the address and try again.`);
     });
@@ -150,7 +290,18 @@ async function openServer(server) {
       backgroundColor: "#11141b",
       icon: windowIcon,
       autoHideMenuBar: isLinux,
+      titleBarStyle: "hidden",
+      ...(isLinux
+        ? { titleBarOverlay: { color: "#000000", symbolColor: "#ffffff", height: navigationHeight } }
+        : { trafficLightPosition: { x: 12, y: 12 } }),
       show: false,
+      webPreferences: {
+        sandbox: true,
+        contextIsolation: true,
+        preload: path.join(__dirname, "navigation-preload.cjs"),
+      },
+    });
+    const view = new WebContentsView({
       webPreferences: {
         partition: "persist:aurral",
         nodeIntegration: false,
@@ -160,10 +311,14 @@ async function openServer(server) {
         additionalArguments: [`--aurral-server=${server.href}`],
       },
     });
-    allowBrowserNavigation(window.webContents);
+    const page = view.webContents;
+    attachNavigation(window, view);
+    allowBrowserNavigation(page);
     window.on("page-title-updated", event => event.preventDefault());
+    await window.loadFile(navigationFile);
+    if (quitting || owner?.isDestroyed()) return "Connection canceled.";
 
-    const failure = await waitForServerPage(window, server, owner);
+    const failure = await waitForServerPage(window, page, server, owner);
     if (failure) return failure;
     if (quitting || window.isDestroyed()) return "Connection canceled.";
 
@@ -175,13 +330,18 @@ async function openServer(server) {
       }
     });
     window.on("closed", () => {
-      if (player === window) player = null;
+      if (player === window) {
+        player = null;
+        playerPage = null;
+      }
     });
     player = window;
+    playerPage = page;
     settings.serverUrl = server.href;
     owner?.destroy();
     previous?.destroy();
     window.show();
+    page.focus();
     saveSettings();
     return "";
   } catch {
@@ -194,9 +354,9 @@ async function openServer(server) {
 }
 
 async function playback(command) {
-  if (!player) return null;
+  if (!playerPage) return null;
   try {
-    return await player.webContents.executeJavaScript(
+    return await playerPage.executeJavaScript(
       `window.__aurralTrayMedia?.(${JSON.stringify(command)}) ?? null`, command !== "state",
     );
   } catch {
@@ -244,6 +404,7 @@ function setAppMenu() {
       submenu: [
         { label: "Show Aurral", click: showAurral },
         { label: "Change Server…", accelerator: "CommandOrControl+,", click: openSetup },
+        { label: "Check for App Updates…", click: () => checkForAppUpdate(true) },
         { label: "Minimize to Tray", type: "checkbox", checked: settings.minimizeToTray, click: item => {
           settings.minimizeToTray = item.checked;
           saveSettings();
@@ -282,8 +443,16 @@ if (!app.requestSingleInstanceLock()) {
       if (!server) return "Enter an HTTP or HTTPS server URL.";
       return openServer(server);
     });
+    ipcMain.on("aurral:navigate-history", (event, direction) => {
+      if (!playerPage || !player || event.senderFrame !== player.webContents.mainFrame) return;
+      navigateHistory(playerPage, direction);
+    });
+    ipcMain.on("aurral:check-for-update", event => {
+      if (player && event.senderFrame === player.webContents.mainFrame) void checkForAppUpdate(true);
+    });
 
     setAppMenu();
+    void checkForAppUpdate(false);
     tray = new Tray(path.join(__dirname, "assets", isLinux ? "icon.png" : "TrayTemplate.png"));
     tray.setToolTip("Aurral App");
     if (isLinux) {

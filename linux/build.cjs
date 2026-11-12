@@ -11,7 +11,11 @@ async function buildLinux() {
   const electronVersion = require("../macos/package.json").devDependencies.electron;
 
   await fs.mkdir(staging, { recursive: true });
-  for (const file of ["main.cjs", "media-preload.cjs", "setup-preload.cjs", "setup.js", "setup.css", "setup.html"]) {
+  for (const file of [
+    "main.cjs", "media-preload.cjs", "updates.cjs",
+    "setup-preload.cjs", "setup.js", "setup.css", "setup.html",
+    "navigation-preload.cjs", "navigation.css", "navigation.html",
+  ]) {
     await fs.copyFile(path.join(shared, file), path.join(staging, file));
   }
   await fs.cp(path.join(shared, "assets"), path.join(staging, "assets"), { recursive: true });

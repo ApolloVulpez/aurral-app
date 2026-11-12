@@ -6,9 +6,9 @@
 </div>
 
 <p align="center">
-  <a href="https://github.com/ApolloVulpez/aurral-app/releases/latest"><img src="https://img.shields.io/github/v/release/ApolloVulpez/aurral-app?label=Windows%20release" alt="Latest Windows release" /></a>
-  <a href="https://github.com/ApolloVulpez/aurral-app/releases/tag/v0.1.1"><img src="https://img.shields.io/badge/macOS-v0.1.1-84cc16" alt="macOS release" /></a>
-  <a href="https://github.com/ApolloVulpez/aurral-app/releases/tag/v0.1.3"><img src="https://img.shields.io/badge/Linux-v0.1.3-84cc16" alt="Linux release" /></a>
+  <a href="https://github.com/ApolloVulpez/aurral-app/releases/tag/windows-v0.1.1"><img src="https://img.shields.io/badge/Windows-v0.1.1-84cc16" alt="Windows release" /></a>
+  <a href="https://github.com/ApolloVulpez/aurral-app/releases/tag/macos-v0.1.2"><img src="https://img.shields.io/badge/macOS-v0.1.2-84cc16" alt="macOS release" /></a>
+  <a href="https://github.com/ApolloVulpez/aurral-app/releases/tag/linux-v0.1.4"><img src="https://img.shields.io/badge/Linux-v0.1.4-84cc16" alt="Linux release" /></a>
 </p>
 
 <p align="center">A Windows, macOS, and Linux desktop front end for your Aurral server.</p>
@@ -27,17 +27,17 @@
 
 ### Windows
 
-Download and run the [Windows x64 installer](https://github.com/ApolloVulpez/aurral-app/releases/latest). The default install folder is `C:\Program Files\Aurral` and setup requires administrator approval. Setup creates a Start menu shortcut and offers a desktop shortcut. Select **Open Aurral** at the end of setup. To keep a shortcut on the taskbar, right-click Aurral's taskbar icon while the app is open and select **Pin to taskbar**.
+Download and run the [Windows x64 installer](https://github.com/ApolloVulpez/aurral-app/releases/download/windows-v0.1.1/Aurral-Setup-0.1.1-win-x64.exe). The default install folder is `C:\Program Files\Aurral` and setup requires administrator approval. Setup creates a Start menu shortcut and offers a desktop shortcut. Select **Open Aurral** at the end of setup. To keep a shortcut on the taskbar, right-click Aurral's taskbar icon while the app is open and select **Pin to taskbar**.
 
 The installer includes .NET and installs the Microsoft Edge WebView2 Runtime if it is missing. That runtime download requires an Internet connection.
 
 ### macOS
 
-Download the DMG for [Apple Silicon](https://github.com/ApolloVulpez/aurral-app/releases/download/v0.1.1/Aurral-App-0.1.1-macOS-arm64.dmg) or [Intel](https://github.com/ApolloVulpez/aurral-app/releases/download/v0.1.1/Aurral-App-0.1.1-macOS-x64.dmg). Open the disk image and drag **Aurral App** into **Applications**. These builds require macOS 13 or later. They are not Apple-notarized, so macOS may block the first launch.
+Download the DMG for [Apple Silicon](https://github.com/ApolloVulpez/aurral-app/releases/download/macos-v0.1.2/Aurral-App-0.1.2-macOS-arm64.dmg) or [Intel](https://github.com/ApolloVulpez/aurral-app/releases/download/macos-v0.1.2/Aurral-App-0.1.2-macOS-x64.dmg). Open the disk image and drag **Aurral App** into **Applications**. These builds require macOS 13 or later. They are not Apple-notarized, so macOS may block the first launch.
 
 ### Linux
 
-Download the x64 [Debian package](https://github.com/ApolloVulpez/aurral-app/releases/download/v0.1.3/Aurral-App-0.1.3-linux-amd64.deb) for Ubuntu, Debian, and Linux Mint, or the [AppImage](https://github.com/ApolloVulpez/aurral-app/releases/download/v0.1.3/Aurral-App-0.1.3-linux-x86_64.AppImage) for Fedora, SteamOS, and Bazzite.
+Download the x64 [Debian package](https://github.com/ApolloVulpez/aurral-app/releases/download/linux-v0.1.4/Aurral-App-0.1.4-linux-amd64.deb) for Ubuntu, Debian, and Linux Mint, or the [AppImage](https://github.com/ApolloVulpez/aurral-app/releases/download/linux-v0.1.4/Aurral-App-0.1.4-linux-x86_64.AppImage) for Fedora, SteamOS, and Bazzite.
 
 Install the `.deb` through your software installer. For the AppImage, allow the file to run as a program in its properties, then open it. Start in Desktop Mode on SteamOS and Bazzite. See the [Linux guide](linux/README.md) for installation commands and desktop integration.
 
@@ -50,6 +50,14 @@ On first launch, enter the URL of a running Aurral server, including its path if
 - **On Linux**, press **Ctrl + ,** to change servers, or tap **Alt** and open **Settings**. Use the Aurral tray icon for playback controls. Turn off **Settings → Minimize to Tray** to make closing the window quit. If your desktop hides the tray icon, launching Aurral App again restores the existing window.
 
 Closing the window keeps playback running by default. The tray or menu-bar icon offers **Show Aurral**, **Stop / Play**, **Previous**, **Next**, and **Quit**. **Stop** pauses the current track so **Play** can resume it. Sign-in, API calls, and streaming go directly to your server.
+
+Use the title-bar arrows to go back and forward. On macOS, use **⌘ + [** and **⌘ + ]**. On Linux, use **Alt + ←** and **Alt + →**.
+
+## App updates
+
+Aurral App checks GitHub on startup. The download icon beside Back and Forward turns white when a newer compatible release is available and stays grey otherwise. Click it to check, download, and install the update. Windows and `.deb` installations can prompt for administrator approval. Aurral App reopens after an in-place update and keeps your server settings and sign-in. If the installation needs to be finished manually, the app opens the downloaded package or shows its location.
+
+Windows, macOS, and Linux use independent version numbers. Publish stable releases with the matching `windows-vMAJOR.MINOR.PATCH`, `macos-vMAJOR.MINOR.PATCH`, or `linux-vMAJOR.MINOR.PATCH` tag and keep the filenames produced by the build scripts.
 
 ## Build and run
 

@@ -33,11 +33,17 @@ Name: "{autodesktop}\Aurral"; Filename: "{app}\Aurral.exe"; WorkingDir: "{app}";
 
 [Run]
 Filename: "{app}\Aurral.exe"; Description: "Open Aurral"; Flags: nowait postinstall runasoriginaluser skipifsilent
+Filename: "{app}\Aurral.exe"; Flags: nowait runasoriginaluser skipifnotsilent; Check: IsAurralUpdate
 
 [Code]
 const
   WebView2Key = 'SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}';
   WebView2Setup = 'MicrosoftEdgeWebview2Setup.exe';
+
+function IsAurralUpdate: Boolean;
+begin
+  Result := ExpandConstant('{param:AurralUpdate|0}') = '1';
+end;
 
 function HasWebView2InRegistry(Root: Integer): Boolean;
 var

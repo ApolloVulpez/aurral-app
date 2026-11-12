@@ -21,6 +21,8 @@ internal sealed class MainWindow : Form
     private readonly ToolStripMenuItem settingsMenu = new("&Settings");
     private readonly ToolStripMenuItem changeServer = new("Change &server…") { Enabled = false };
     private readonly ToolStripMenuItem minimizeToTray = new("Minimize to &tray") { CheckOnClick = true };
+    private readonly CaptionBar captionBar;
+    private readonly ToolTip captionToolTips = new();
     private readonly TrayControls tray;
     private string serverAddress = "";
     private ulong? openingNavigation;
@@ -30,7 +32,7 @@ internal sealed class MainWindow : Form
 
     internal MainWindow()
     {
-        Text = "Aurral";
+        Text = Application.ProductName;
         Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
         AutoScaleMode = AutoScaleMode.Font;
         BackColor = ContentBackground;
@@ -43,8 +45,22 @@ internal sealed class MainWindow : Form
         tray = new TrayControls(Icon, ShowFromTray, Quit);
         settingsMenu.DropDownItems.AddRange([changeServer, minimizeToTray]);
         settingsBar.Items.Add(settingsMenu);
+        captionBar = new CaptionBar(this);
+        captionToolTips.SetToolTip(captionBar.Back, "Back");
+        captionToolTips.SetToolTip(captionBar.Forward, "Forward");
+        captionToolTips.SetToolTip(captionBar.UpdateButton, "Check for app updates");
+        captionBar.UpdateButton.Click += async (_, _) => await CheckForAppUpdateAsync(install: true);
+        captionBar.Back.Click += (_, _) =>
+        {
+            if (browser.CanGoBack) browser.GoBack();
+        };
+        captionBar.Forward.Click += (_, _) =>
+        {
+            if (browser.CanGoForward) browser.GoForward();
+        };
         Controls.Add(browser);
         Controls.Add(settingsBar);
+        Controls.Add(captionBar);
 
         KeyDown += TrackAlt;
         KeyUp += ToggleSettingsBarOnAlt;
@@ -62,7 +78,11 @@ internal sealed class MainWindow : Form
             SavePreference(MinimizeToTrayFile, minimizeToTray.Checked ? "true" : "false",
                 "Aurral couldn't remember the tray setting for next time.");
         };
-        Shown += async (_, _) => await InitializeBrowserAsync();
+        Shown += async (_, _) =>
+        {
+            captionBar.PerformLayout();
+            await Task.WhenAll(CheckForAppUpdateAsync(install: false), InitializeBrowserAsync());
+        };
     }
 
     protected override void OnHandleCreated(EventArgs e)
@@ -73,6 +93,28 @@ internal sealed class MainWindow : Form
         SetWindowAttribute(Handle, UseImmersiveDarkMode, 1);
         SetWindowAttribute(Handle, CaptionColor, ColorTranslator.ToWin32(Color.Black));
         SetWindowAttribute(Handle, CaptionTextColor, ColorTranslator.ToWin32(Color.White));
+        captionBar?.ExtendFrame();
+    }
+
+    protected override void OnDpiChanged(DpiChangedEventArgs e)
+    {
+        base.OnDpiChanged(e);
+        captionBar?.ExtendFrame();
+    }
+
+    protected override void WndProc(ref Message m)
+    {
+        if (captionBar?.ExtendsFrame == true && m.Msg == CaptionBar.CalculateClientSize && m.WParam != IntPtr.Zero)
+        {
+            var top = Marshal.ReadInt32(m.LParam, sizeof(int));
+            base.WndProc(ref m);
+            captionBar.ExtendClientTop(ref m, top);
+            return;
+        }
+
+        if (captionBar?.TryHandleDwmMessage(ref m) == true) return;
+        base.WndProc(ref m);
+        captionBar?.HitTestCaption(ref m);
     }
 
     [DllImport("dwmapi.dll", EntryPoint = "DwmSetWindowAttribute", ExactSpelling = true)]
@@ -89,7 +131,11 @@ internal sealed class MainWindow : Form
 
     protected override void Dispose(bool disposing)
     {
-        if (disposing) tray.Dispose();
+        if (disposing)
+        {
+            captionToolTips.Dispose();
+            tray.Dispose();
+        }
         base.Dispose(disposing);
     }
 
@@ -115,6 +161,52 @@ internal sealed class MainWindow : Form
     {
         quitting = true;
         Close();
+    }
+
+    private async Task CheckForAppUpdateAsync(bool install)
+    {
+        if (!captionBar.UpdateButton.Enabled) return;
+        captionBar.UpdateButton.Enabled = false;
+        AppUpdates.Update? update = null;
+        SetUpdateLabel("Checking for app updates…");
+        try
+        {
+            update = await AppUpdates.CheckAsync();
+            if (IsDisposed || !install) return;
+            if (update is null)
+            {
+                MessageBox.Show(this, "Aurral App is up to date.", "App updates", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            var installed = AppUpdates.IsInstalled();
+            if (!installed && MessageBox.Show(this, $"Open the Windows installer for Aurral App {update.Version}?",
+                "App updates", MessageBoxButtons.OKCancel, MessageBoxIcon.Information) != DialogResult.OK) return;
+
+            SetUpdateLabel($"Installing Aurral App {update.Version}…");
+            await AppUpdates.InstallAsync(update, installed);
+        }
+        catch (Exception error)
+        {
+            if (install && !IsDisposed)
+                MessageBox.Show(this, $"Aurral App couldn't finish the update.\n\n{error.Message}",
+                    "App updates", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
+        finally
+        {
+            if (!IsDisposed)
+            {
+                captionBar.UpdateButton.Enabled = true;
+                captionBar.UpdateButton.ForeColor = update is null ? Color.Gray : Color.White;
+                SetUpdateLabel(update is null ? "Check for app updates" : $"Update to Aurral App {update.Version}");
+            }
+        }
+    }
+
+    private void SetUpdateLabel(string label)
+    {
+        captionBar.UpdateButton.AccessibleName = label;
+        captionToolTips.SetToolTip(captionBar.UpdateButton, label);
     }
 
     private void TrackAlt(object? sender, KeyEventArgs e) =>
@@ -173,6 +265,11 @@ internal sealed class MainWindow : Form
         core.Settings.AreHostObjectsAllowed = false;
         core.Settings.IsWebMessageEnabled = false;
         core.Settings.IsPasswordAutosaveEnabled = false;
+        core.HistoryChanged += (_, _) =>
+        {
+            captionBar.Back.Enabled = core.CanGoBack;
+            captionBar.Forward.Enabled = core.CanGoForward;
+        };
         core.NavigationStarting += (_, args) =>
         {
             if (openingServer && !args.IsRedirected)
@@ -209,7 +306,7 @@ internal sealed class MainWindow : Form
         if (IsDisposed) return;
 
         serverAddress = server.AbsoluteUri;
-        Text = $"Aurral — {server.Authority}";
+        Text = $"{Application.ProductName} — {server.Authority}";
         openingNavigation = null;
         openingServer = true;
         tray.Visible = true;

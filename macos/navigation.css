@@ -1,0 +1,89 @@
+:root {
+  color-scheme: dark;
+  background: #000;
+}
+
+body { margin: 0; }
+
+nav {
+  position: absolute;
+  left: env(titlebar-area-x, 0px);
+  width: env(titlebar-area-width, 100%);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  height: 36px;
+  padding-inline: 4px;
+  -webkit-app-region: drag;
+}
+
+.title {
+  margin-inline-end: auto;
+  padding-inline: 4px;
+  color: #fff;
+  font: 12px system-ui, sans-serif;
+}
+
+.controls-left #update { order: 1; }
+
+.controls-left .title {
+  order: 2;
+  margin-inline: 4px auto;
+}
+
+.mac nav {
+  left: 76px;
+  width: calc(100% - 76px);
+}
+
+button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font: 16px system-ui, sans-serif;
+  -webkit-app-region: no-drag;
+}
+
+button:enabled { cursor: pointer; }
+button:focus-visible { outline: 2px solid #a3e635; }
+button:disabled { color: #808080; }
+#update { color: #808080; }
+#update.available:enabled { color: #fff; }
+
+.download-icon {
+  position: relative;
+  box-sizing: border-box;
+  width: 12px;
+  height: 12px;
+  border-bottom: 2px solid currentColor;
+}
+
+.download-icon::before,
+.download-icon::after {
+  position: absolute;
+  left: 50%;
+  content: "";
+}
+
+.download-icon::before {
+  top: 0;
+  width: 2px;
+  height: 7px;
+  background: currentColor;
+  transform: translateX(-50%);
+}
+
+.download-icon::after {
+  box-sizing: border-box;
+  top: 3px;
+  width: 6px;
+  height: 6px;
+  border: solid currentColor;
+  border-width: 0 2px 2px 0;
+  transform: translateX(-50%) rotate(45deg);
+}
