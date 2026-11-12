@@ -1,0 +1,97 @@
+name: Bug report
+description: Report broken behavior, regressions, or crashes in Aurral App.
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for one desktop app issue. Report server bugs and problems you can also reproduce in a regular browser to the [main Aurral project](https://github.com/lklynet/aurral/issues).
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      options:
+        - Installation or launch
+        - Connecting to a server
+        - Window controls or keyboard shortcuts
+        - Tray or media controls
+        - App updates
+        - Not sure or other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: package
+    attributes:
+      label: Which build are you using?
+      options:
+        - Windows x64 installer
+        - macOS Apple Silicon DMG
+        - macOS Intel DMG
+        - Linux Debian package (.deb)
+        - Linux AppImage
+        - Built from source or other
+    validations:
+      required: true
+
+  - type: input
+    id: os-version
+    attributes:
+      label: Operating system and version
+      placeholder: Windows 11 24H2, macOS 15.7, or Ubuntu 24.04
+    validations:
+      required: true
+
+  - type: input
+    id: app-version
+    attributes:
+      label: Aurral App version
+      description: Use the version from the installer filename or release page. For a build from source, give the commit if you know it.
+      placeholder: '0.1.4'
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Give the shortest sequence that reproduces the problem.
+      placeholder: |
+        1. Open Aurral App
+        2. …
+        3. …
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What did you expect Aurral App to do?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What did Aurral App do instead?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Does the same problem happen in a regular browser?
+      options:
+        - Only in Aurral App
+        - Also in a browser
+        - Haven't checked
+        - Doesn't apply
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Screenshots or error messages
+      description: Attach a screenshot or paste any relevant error text.
