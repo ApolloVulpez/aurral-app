@@ -1,4 +1,6 @@
 using System.Runtime.InteropServices;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.WinForms;
 
@@ -21,6 +23,11 @@ internal sealed class MainWindow : Form
     private readonly ToolStripMenuItem settingsMenu = new("&Settings");
     private readonly ToolStripMenuItem changeServer = new("Change &server…") { Enabled = false };
     private readonly ToolStripMenuItem minimizeToTray = new("Minimize to &tray") { CheckOnClick = true };
+    private readonly ToolStripMenuItem discordActivity = new("Discord Rich Presence") { CheckOnClick = true };
+    private readonly ToolStripMenuItem discordLinks = new("Share Listen Links on Discord") { CheckOnClick = true };
+    private readonly DiscordPresence discord = new(DiscordPresence.ReadResource("Aurral.DiscordApplicationId.txt"));
+    private readonly DiscordArtwork discordArtwork = new();
+    private readonly System.Windows.Forms.Timer discordTimer = new() { Interval = 2000 };
     private readonly CaptionBar captionBar;
     private readonly ToolTip captionToolTips = new();
     private readonly TrayControls tray;
@@ -29,6 +36,7 @@ internal sealed class MainWindow : Form
     private bool openingServer;
     private bool altPressedAlone;
     private bool quitting;
+    private bool refreshingDiscord;
 
     internal MainWindow()
     {
@@ -42,8 +50,11 @@ internal sealed class MainWindow : Form
         KeyPreview = true;
 
         minimizeToTray.Checked = ReadPreference(MinimizeToTrayFile) != "false";
+        discordActivity.Checked = ReadPreference(DiscordActivityFile) != "false";
+        discordLinks.Checked = ReadPreference(DiscordLinksFile) != "false";
+        discordLinks.Enabled = discordActivity.Checked;
         tray = new TrayControls(Icon, ShowFromTray, Quit);
-        settingsMenu.DropDownItems.AddRange([changeServer, minimizeToTray]);
+        settingsMenu.DropDownItems.AddRange([changeServer, minimizeToTray, new ToolStripSeparator(), discordActivity, discordLinks]);
         settingsBar.Items.Add(settingsMenu);
         captionBar = new CaptionBar(this);
         captionToolTips.SetToolTip(captionBar.Back, "Back");
@@ -78,9 +89,14 @@ internal sealed class MainWindow : Form
             SavePreference(MinimizeToTrayFile, minimizeToTray.Checked ? "true" : "false",
                 "Aurral couldn't remember the tray setting for next time.");
         };
+        discordActivity.Click += async (_, _) => await ToggleDiscordAsync();
+        discordLinks.Click += (_, _) =>
+            SavePreference(DiscordLinksFile, discordLinks.Checked ? "true" : "false", "Aurral couldn't save the Discord listen-link setting.");
+        discordTimer.Tick += async (_, _) => await RefreshDiscordAsync();
         Shown += async (_, _) =>
         {
             captionBar.PerformLayout();
+            discordTimer.Enabled = discordActivity.Checked;
             await Task.WhenAll(CheckForAppUpdateAsync(install: false), InitializeBrowserAsync());
         };
     }
@@ -133,6 +149,8 @@ internal sealed class MainWindow : Form
     {
         if (disposing)
         {
+            discordTimer.Dispose();
+            discord.Dispose();
             captionToolTips.Dispose();
             tray.Dispose();
         }
@@ -161,6 +179,43 @@ internal sealed class MainWindow : Form
     {
         quitting = true;
         Close();
+    }
+
+    private async Task ToggleDiscordAsync()
+    {
+        discordLinks.Enabled = discordActivity.Checked;
+        discordTimer.Enabled = discordActivity.Checked;
+        SavePreference(DiscordActivityFile, discordActivity.Checked ? "true" : "false", "Aurral couldn't save the Discord setting.");
+        if (discordActivity.Checked)
+        {
+            await RefreshDiscordAsync();
+        }
+        else
+        {
+            await discord.UpdateAsync(null);
+            if (!IsDisposed && !discordActivity.Checked) discord.Dispose();
+        }
+    }
+
+    private async Task RefreshDiscordAsync()
+    {
+        if (refreshingDiscord || !discordActivity.Checked || IsDisposed) return;
+        refreshingDiscord = true;
+        try
+        {
+            var address = serverAddress;
+            var share = discordLinks.Checked && discord.Connected;
+            var playback = await tray.ReadDiscordActivityAsync(address, share);
+            if (IsDisposed || !discordActivity.Checked || address != serverAddress || (share && !discordLinks.Checked)) return;
+            var activity = playback?.Activity;
+            if (activity is not null && discord.Connected && playback?.CoverSearch is { } track &&
+                discordArtwork.Get(track) is { } cover)
+            {
+                activity["assets"] = new JsonObject { ["large_image"] = cover };
+            }
+            await discord.UpdateAsync(activity is null ? null : JsonSerializer.SerializeToElement(activity));
+        }
+        finally { refreshingDiscord = false; }
     }
 
     private async Task CheckForAppUpdateAsync(bool install)
@@ -239,6 +294,8 @@ internal sealed class MainWindow : Form
 
     private string AddressFile => Path.Combine(appData, "server.txt");
     private string MinimizeToTrayFile => Path.Combine(appData, "minimize-to-tray.txt");
+    private string DiscordActivityFile => Path.Combine(appData, "discord-rich-presence.txt");
+    private string DiscordLinksFile => Path.Combine(appData, "discord-listen-links.txt");
 
     private async Task InitializeBrowserAsync()
     {

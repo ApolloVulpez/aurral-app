@@ -6,11 +6,13 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>Aurral</AssemblyName>
-    <Version>0.1.1</Version>
+    <Version>0.1.2</Version>
     <ApplicationIcon>Aurral.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4314.35" />
+    <EmbeddedResource Include="macos/discord-activity.js" LogicalName="Aurral.DiscordActivity.js" />
+    <EmbeddedResource Include="macos/assets/discord-application-id.txt" LogicalName="Aurral.DiscordApplicationId.txt" />
   </ItemGroup>
   <Target Name="RemoveWebView2WpfReference" BeforeTargets="ResolveAssemblyReferences">
     <!-- The WebView2 package adds its WPF assembly to WinForms projects as well. -->

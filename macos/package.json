@@ -1,7 +1,7 @@
 {
   "name": "aurral-app",
   "productName": "Aurral App",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "private": true,
   "description": "A desktop front end for your Aurral server.",
   "license": "MIT",

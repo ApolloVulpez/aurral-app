@@ -1,6 +1,6 @@
 # Aurral App for Linux
 
-Download the x64 [Debian package](https://github.com/ApolloVulpez/aurral-app/releases/download/linux-v0.1.4/Aurral-App-0.1.4-linux-amd64.deb) or [AppImage](https://github.com/ApolloVulpez/aurral-app/releases/download/linux-v0.1.4/Aurral-App-0.1.4-linux-x86_64.AppImage) from the [Linux release](https://github.com/ApolloVulpez/aurral-app/releases/tag/linux-v0.1.4).
+Download the x64 [Debian package](https://github.com/ApolloVulpez/aurral-app/releases/download/linux-v0.1.5/Aurral-App-0.1.5-linux-amd64.deb) or [AppImage](https://github.com/ApolloVulpez/aurral-app/releases/download/linux-v0.1.5/Aurral-App-0.1.5-linux-x86_64.AppImage) from the [Linux release](https://github.com/ApolloVulpez/aurral-app/releases/tag/linux-v0.1.5).
 
 | Distribution | Package |
 | --- | --- |
@@ -15,7 +15,7 @@ Use a current, supported release of your distribution.
 Install the package through your software installer, or run this command in the folder containing the download.
 
 ```sh
-sudo apt install ./Aurral-App-0.1.4-linux-amd64.deb
+sudo apt install ./Aurral-App-0.1.5-linux-amd64.deb
 ```
 
 Open **Aurral App** from your application menu.
@@ -25,8 +25,8 @@ Open **Aurral App** from your application menu.
 In the file's properties, allow it to run as a program, then open it. You can also run these commands in the download folder.
 
 ```sh
-chmod +x Aurral-App-0.1.4-linux-x86_64.AppImage
-./Aurral-App-0.1.4-linux-x86_64.AppImage
+chmod +x Aurral-App-0.1.5-linux-x86_64.AppImage
+./Aurral-App-0.1.5-linux-x86_64.AppImage
 ```
 
 The AppImage uses a runtime that avoids a dependency on FUSE 2. On Ubuntu and Mint, the Debian package also supplies the desktop integration needed by their application security settings.

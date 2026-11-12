@@ -10,7 +10,18 @@ function installMediaBridge(serverUrl) {
 
   const session = navigator.mediaSession;
   const setActionHandler = session.setActionHandler.bind(session);
+  const setPositionState = session.setPositionState.bind(session);
   const handlers = new Map();
+  let timing;
+  session.setPositionState = position => {
+    setPositionState(position);
+    timing = null;
+    if (position?.duration > 0 && position.playbackRate > 0) {
+      const start = Date.now() / 1000 - position.position / position.playbackRate;
+      timing = { metadata: session.metadata, start: Math.round(start),
+        end: Math.round(start + position.duration / position.playbackRate) };
+    }
+  };
   session.setActionHandler = (action, handler) => {
     setActionHandler(action, handler);
     if (handler) handlers.set(action, handler);
@@ -20,6 +31,13 @@ function installMediaBridge(serverUrl) {
   window.__aurralTrayMedia = command => {
     const playing = session.playbackState === "playing";
     const toggle = playing ? "pause" : "play";
+    if (command === "presence") {
+      const metadata = session.metadata;
+      if (!playing || !metadata) return null;
+      return { title: metadata.title, artist: metadata.artist, album: metadata.album,
+        artwork: metadata.artwork[0]?.src,
+        timestamps: timing?.metadata === metadata ? { start: timing.start, end: timing.end } : null };
+    }
     if (command === "state") {
       return {
         playing,

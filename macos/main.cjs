@@ -2,6 +2,12 @@ const { app, BrowserWindow, dialog, ipcMain, Menu, session, shell, Tray, WebCont
 const fs = require("node:fs");
 const path = require("node:path");
 const { checkForUpdate, installUpdate } = require("./updates.cjs");
+const { DiscordPresence } = require("./discord-presence.cjs");
+const { DiscordArtwork } = require("./discord-artwork.cjs");
+
+const discordActivityScript = fs.readFileSync(path.join(__dirname, "discord-activity.js"), "utf8").trim();
+const discord = new DiscordPresence(fs.readFileSync(path.join(__dirname, "assets", "discord-application-id.txt"), "utf8").trim());
+const discordArtwork = new DiscordArtwork();
 
 const setupFile = path.join(__dirname, "setup.html");
 const navigationFile = path.join(__dirname, "navigation.html");
@@ -22,6 +28,8 @@ let refreshingTray = false;
 let lastTrayState;
 let availableUpdate;
 let updateStatus = "";
+let discordRefresh;
+let refreshingDiscord = false;
 
 function parseServer(address) {
   if (typeof address !== "string") return null;
@@ -38,9 +46,10 @@ function parseServer(address) {
 function readSettings() {
   try {
     const saved = JSON.parse(fs.readFileSync(settingsFile, "utf8"));
-    return { serverUrl: parseServer(saved.serverUrl)?.href ?? "", minimizeToTray: saved.minimizeToTray !== false };
+    return { serverUrl: parseServer(saved.serverUrl)?.href ?? "", minimizeToTray: saved.minimizeToTray !== false,
+      discordPresence: saved.discordPresence !== false, discordListenLinks: saved.discordListenLinks !== false };
   } catch {
-    return { serverUrl: "", minimizeToTray: true };
+    return { serverUrl: "", minimizeToTray: true, discordPresence: true, discordListenLinks: true };
   }
 }
 
@@ -51,6 +60,40 @@ function saveSettings() {
     fs.renameSync(pendingFile, settingsFile);
   } catch {
     dialog.showErrorBox("Aurral App", "Aurral couldn't save its settings.");
+  }
+}
+
+async function refreshDiscord() {
+  if (refreshingDiscord || quitting || !settings.discordPresence) return;
+  refreshingDiscord = true;
+  try {
+    const page = playerPage;
+    const server = settings.serverUrl;
+    const share = settings.discordListenLinks && discord.connected;
+    const playback = await page?.executeJavaScript(`${discordActivityScript}(${JSON.stringify(server)}, ${share})`);
+    if (quitting || !settings.discordPresence || playerPage !== page || server !== settings.serverUrl ||
+        (share && !settings.discordListenLinks)) return;
+    const activity = playback?.activity;
+    if (activity && discord.connected && playback.coverSearch) {
+      const cover = discordArtwork.get(playback.coverSearch);
+      if (cover) activity.assets = { large_image: cover };
+    }
+    await discord.update(activity ?? null);
+  } catch {
+    // The page or Discord can close while a refresh is in progress.
+  } finally {
+    refreshingDiscord = false;
+  }
+}
+
+function applyDiscordSettings() {
+  clearInterval(discordRefresh);
+  if (settings.discordPresence) {
+    discordRefresh = setInterval(refreshDiscord, 2000);
+    discordRefresh.unref();
+    void refreshDiscord();
+  } else {
+    discord.disconnect();
   }
 }
 
@@ -410,6 +453,19 @@ function setAppMenu() {
           saveSettings();
         } },
         { type: "separator" },
+        { label: "Discord Rich Presence", type: "checkbox", checked: settings.discordPresence, click: item => {
+          settings.discordPresence = item.checked;
+          saveSettings();
+          applyDiscordSettings();
+          setAppMenu();
+        } },
+        { label: "Share Listen Links on Discord", type: "checkbox", checked: settings.discordListenLinks,
+          enabled: settings.discordPresence, click: item => {
+            settings.discordListenLinks = item.checked;
+            saveSettings();
+            void refreshDiscord();
+          } },
+        { type: "separator" },
         { role: "quit" },
       ],
     },
@@ -429,6 +485,8 @@ if (!app.requestSingleInstanceLock()) {
   app.on("before-quit", () => {
     quitting = true;
     clearInterval(trayRefresh);
+    clearInterval(discordRefresh);
+    discord.disconnect();
   });
   app.whenReady().then(async () => {
     settingsFile = path.join(app.getPath("userData"), "settings.json");
@@ -452,6 +510,7 @@ if (!app.requestSingleInstanceLock()) {
     });
 
     setAppMenu();
+    applyDiscordSettings();
     void checkForAppUpdate(false);
     tray = new Tray(path.join(__dirname, "assets", isLinux ? "icon.png" : "TrayTemplate.png"));
     tray.setToolTip("Aurral App");

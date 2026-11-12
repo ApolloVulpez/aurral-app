@@ -18,7 +18,18 @@ internal sealed class TrayControls : IDisposable
 
             const session = navigator.mediaSession;
             const setActionHandler = session.setActionHandler.bind(session);
+            const setPositionState = session.setPositionState.bind(session);
             const handlers = new Map();
+            let timing;
+            session.setPositionState = position => {
+                setPositionState(position);
+                timing = null;
+                if (position?.duration > 0 && position.playbackRate > 0) {
+                    const start = Date.now() / 1000 - position.position / position.playbackRate;
+                    timing = { metadata: session.metadata, start: Math.round(start),
+                        end: Math.round(start + position.duration / position.playbackRate) };
+                }
+            };
             session.setActionHandler = (action, handler) => {
                 setActionHandler(action, handler);
                 if (handler) handlers.set(action, handler);
@@ -26,6 +37,13 @@ internal sealed class TrayControls : IDisposable
             };
 
             window.__aurralTrayMedia = command => {
+                if (command === "presence") {
+                    const metadata = session.metadata;
+                    if (session.playbackState !== "playing" || !metadata) return null;
+                    return { title: metadata.title, artist: metadata.artist, album: metadata.album,
+                        artwork: metadata.artwork[0]?.src,
+                        timestamps: timing?.metadata === metadata ? { start: timing.start, end: timing.end } : null };
+                }
                 if (command === "state") {
                     return {
                         Playing: session.playbackState === "playing",
@@ -45,6 +63,7 @@ internal sealed class TrayControls : IDisposable
         """;
 
     private readonly NotifyIcon icon;
+    private static readonly string DiscordActivityScript = DiscordPresence.ReadResource("Aurral.DiscordActivity.js");
     private readonly ContextMenuStrip menu = new();
     private readonly ToolStripMenuItem toggle = new("Play") { Enabled = false };
     private readonly ToolStripMenuItem previous = new("Previous") { Enabled = false };
@@ -116,14 +135,28 @@ internal sealed class TrayControls : IDisposable
         next.Enabled = state?.CanNext == true;
     }
 
-    private async Task<string?> ExecuteAsync(string command)
+    internal async Task<DiscordPlayback?> ReadDiscordActivityAsync(string serverAddress, bool sharePlayback)
+    {
+        var result = await ExecuteScriptAsync($"{DiscordActivityScript}({JsonSerializer.Serialize(serverAddress)}, " +
+            $"{JsonSerializer.Serialize(sharePlayback)})");
+        if (result is null) return null;
+        try
+        {
+            return JsonSerializer.Deserialize<DiscordPlayback>(result, JsonSerializerOptions.Web);
+        }
+        catch (JsonException) { return null; }
+    }
+
+    private Task<string?> ExecuteAsync(string command) =>
+        ExecuteScriptAsync($"window.__aurralTrayMedia?.({JsonSerializer.Serialize(command)})");
+
+    private async Task<string?> ExecuteScriptAsync(string script)
     {
         if (!PlaybackAvailable || webView is null || scriptId is null) return null;
 
         try
         {
-            return await webView.ExecuteScriptAsync(
-                $"window.__aurralTrayMedia?.({JsonSerializer.Serialize(command)})");
+            return await webView.ExecuteScriptAsync(script);
         }
         catch (Exception ex) when (ex is InvalidOperationException or COMException)
         {
