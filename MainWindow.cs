@@ -53,7 +53,7 @@ internal sealed class MainWindow : Form
         discordActivity.Checked = ReadPreference(DiscordActivityFile) != "false";
         discordLinks.Checked = ReadPreference(DiscordLinksFile) != "false";
         discordLinks.Enabled = discordActivity.Checked;
-        tray = new TrayControls(Icon, ShowFromTray, Quit);
+        tray = new TrayControls(Icon, ShowExistingWindow, Quit);
         settingsMenu.DropDownItems.AddRange([changeServer, minimizeToTray, new ToolStripSeparator(), discordActivity, discordLinks]);
         settingsBar.Items.Add(settingsMenu);
         captionBar = new CaptionBar(this);
@@ -168,12 +168,26 @@ internal sealed class MainWindow : Form
         Hide();
     }
 
-    private void ShowFromTray()
+    internal void ShowExistingWindow()
     {
+        if (quitting || IsDisposed) return;
         Show();
         if (WindowState == FormWindowState.Minimized) WindowState = FormWindowState.Normal;
+        var popup = GetLastActivePopup(Handle);
+        if (popup != Handle && IsWindowVisible(popup) && SetForegroundWindow(popup)) return;
         Activate();
     }
+
+    [DllImport("user32.dll", ExactSpelling = true)]
+    private static extern IntPtr GetLastActivePopup(IntPtr window);
+
+    [DllImport("user32.dll", ExactSpelling = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool IsWindowVisible(IntPtr window);
+
+    [DllImport("user32.dll", ExactSpelling = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool SetForegroundWindow(IntPtr window);
 
     private void Quit()
     {
