@@ -7,8 +7,8 @@
 
 <p align="center">
   <a href="https://github.com/ApolloVulpez/aurral-app/releases/tag/windows-v0.1.4"><img src="https://img.shields.io/badge/Windows-v0.1.4-84cc16" alt="Windows release" /></a>
-  <a href="https://github.com/ApolloVulpez/aurral-app/releases/tag/macos-v0.1.3"><img src="https://img.shields.io/badge/macOS-v0.1.3-84cc16" alt="macOS release" /></a>
-  <a href="https://github.com/ApolloVulpez/aurral-app/releases/tag/linux-v0.1.5"><img src="https://img.shields.io/badge/Linux-v0.1.5-84cc16" alt="Linux release" /></a>
+  <a href="https://github.com/ApolloVulpez/aurral-app/releases/tag/macos-v0.1.4"><img src="https://img.shields.io/badge/macOS-v0.1.4-84cc16" alt="macOS release" /></a>
+  <a href="https://github.com/ApolloVulpez/aurral-app/releases/tag/linux-v0.1.6"><img src="https://img.shields.io/badge/Linux-v0.1.6-84cc16" alt="Linux release" /></a>
 </p>
 
 <p align="center">A Windows, macOS, and Linux desktop front end for your Aurral server.</p>
@@ -33,11 +33,11 @@ The installer includes .NET and installs the Microsoft Edge WebView2 Runtime if 
 
 ### macOS
 
-Download the DMG for [Apple Silicon](https://github.com/ApolloVulpez/aurral-app/releases/download/macos-v0.1.3/Aurral-App-0.1.3-macOS-arm64.dmg) or [Intel](https://github.com/ApolloVulpez/aurral-app/releases/download/macos-v0.1.3/Aurral-App-0.1.3-macOS-x64.dmg). Open the disk image and drag **Aurral App** into **Applications**. These builds require macOS 13 or later. They are not Apple-notarized, so macOS may block the first launch.
+Download the DMG for [Apple Silicon](https://github.com/ApolloVulpez/aurral-app/releases/download/macos-v0.1.4/Aurral-App-0.1.4-macOS-arm64.dmg) or [Intel](https://github.com/ApolloVulpez/aurral-app/releases/download/macos-v0.1.4/Aurral-App-0.1.4-macOS-x64.dmg). Open the disk image and drag **Aurral App** into **Applications**. These builds require macOS 13 or later. They are not Apple-notarized, so macOS may block the first launch.
 
 ### Linux
 
-Download the x64 [Debian package](https://github.com/ApolloVulpez/aurral-app/releases/download/linux-v0.1.5/Aurral-App-0.1.5-linux-amd64.deb), [AppImage](https://github.com/ApolloVulpez/aurral-app/releases/download/linux-v0.1.5/Aurral-App-0.1.5-linux-x86_64.AppImage), or [Flatpak bundle](https://github.com/ApolloVulpez/aurral-app/releases/download/linux-v0.1.5/Aurral-App-0.1.5-linux-x86_64.flatpak).
+Download the x64 [Debian package](https://github.com/ApolloVulpez/aurral-app/releases/download/linux-v0.1.6/Aurral-App-0.1.6-linux-amd64.deb), [AppImage](https://github.com/ApolloVulpez/aurral-app/releases/download/linux-v0.1.6/Aurral-App-0.1.6-linux-x86_64.AppImage), or [Flatpak bundle](https://github.com/ApolloVulpez/aurral-app/releases/download/linux-v0.1.6/Aurral-App-0.1.6-linux-x86_64.flatpak).
 
 Install the `.deb` through your software installer. For the AppImage, allow the file to run as a program in its properties, then open it. For the Flatpak, open the downloaded bundle in your software center or install it from the terminal. Start in Desktop Mode on SteamOS and Bazzite. See the [Linux guide](linux/README.md) for the commands.
 
@@ -46,7 +46,7 @@ Install the `.deb` through your software installer. For the AppImage, allow the 
 On first launch, enter the URL of a running Aurral server, including its path if it lives under a subpath (for example, `https://music.example.com/aurral`). Then sign in through the Aurral screen that opens in the window. The app remembers the last server it opened and keeps you signed in across launches until you sign out or the server ends the session.
 
 - **On Windows**, tap **Alt** and choose **Settings → Change server** to switch servers. Hover over Aurral on the taskbar for **Previous**, **Play/Pause**, and **Next**. Right-click the Aurral icon in the notification area to open the tray menu. To make **X** exit the app, turn off **Settings → Minimize to tray**.
-- **On macOS**, press **⌘ + ,** or choose **Aurral App → Change Server** to switch servers. Click the Aurral icon near the clock in the macOS menu bar to open the playback menu. To make closing the window exit the app, turn off **Aurral App → Minimize to Tray**.
+- **On macOS**, press **⌘ + ,** or choose **Aurral App → Change Server** to switch servers. Right-click Aurral in the Dock for **Previous Track**, **Play/Pause**, and **Next Track**. You can also open playback controls from the Aurral icon near the clock. To make closing the window exit the app, turn off **Aurral App → Minimize to Tray**.
 - **On Linux**, press **Ctrl + ,** to change servers, or tap **Alt** and open **Settings**. Use the Aurral tray icon for playback controls. Turn off **Settings → Minimize to Tray** to make closing the window quit. If your desktop hides the tray icon, launching Aurral App again restores the existing window.
 
 Closing the window keeps playback running by default. Launch Aurral App again or choose **Show Aurral** from the tray or menu-bar icon to bring back the existing window. The tray menu also offers **Stop / Play**, **Previous**, **Next**, and **Quit**. **Stop** pauses the current track so **Play** can resume it. Sign-in, API calls, and streaming go directly to your server.

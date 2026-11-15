@@ -7,3 +7,16 @@ Icon=io.github.apollovulpez.aurral-app
 StartupWMClass=io.github.apollovulpez.aurral-app
 Terminal=false
 Categories=AudioVideo;Audio;Player;
+Actions=PreviousTrack;PlayPause;NextTrack;
+
+[Desktop Action PreviousTrack]
+Name=Previous Track
+Exec=aurral-app --aurral-playback=previoustrack
+
+[Desktop Action PlayPause]
+Name=Play/Pause
+Exec=aurral-app --aurral-playback=toggle
+
+[Desktop Action NextTrack]
+Name=Next Track
+Exec=aurral-app --aurral-playback=nexttrack

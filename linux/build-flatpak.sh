@@ -32,6 +32,7 @@ done
 flatpak build-finish --command=aurral-app \
   --share=network --share=ipc --socket=wayland --socket=fallback-x11 \
   --socket=pulseaudio --device=dri --talk-name=org.kde.StatusNotifierWatcher \
+  --own-name="org.mpris.MediaPlayer2.$app_id" \
   --talk-name=com.canonical.Unity --filesystem=xdg-run/app/com.discordapp.Discord:ro \
   "${discord_sockets[@]}" "$work/build"
 flatpak build-export --arch=x86_64 "$work/repo" "$work/build" stable

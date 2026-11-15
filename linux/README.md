@@ -1,6 +1,6 @@
 # Aurral App for Linux
 
-Download the x64 [Debian package](https://github.com/ApolloVulpez/aurral-app/releases/download/linux-v0.1.5/Aurral-App-0.1.5-linux-amd64.deb), [AppImage](https://github.com/ApolloVulpez/aurral-app/releases/download/linux-v0.1.5/Aurral-App-0.1.5-linux-x86_64.AppImage), or [Flatpak bundle](https://github.com/ApolloVulpez/aurral-app/releases/download/linux-v0.1.5/Aurral-App-0.1.5-linux-x86_64.flatpak) from the [Linux release](https://github.com/ApolloVulpez/aurral-app/releases/tag/linux-v0.1.5).
+Download the x64 [Debian package](https://github.com/ApolloVulpez/aurral-app/releases/download/linux-v0.1.6/Aurral-App-0.1.6-linux-amd64.deb), [AppImage](https://github.com/ApolloVulpez/aurral-app/releases/download/linux-v0.1.6/Aurral-App-0.1.6-linux-x86_64.AppImage), or [Flatpak bundle](https://github.com/ApolloVulpez/aurral-app/releases/download/linux-v0.1.6/Aurral-App-0.1.6-linux-x86_64.flatpak) from the [Linux release](https://github.com/ApolloVulpez/aurral-app/releases/tag/linux-v0.1.6).
 
 | Distribution | Package |
 | --- | --- |
@@ -15,7 +15,7 @@ Use a current, supported release of your distribution.
 Install the package through your software installer, or run this command in the folder containing the download.
 
 ```sh
-sudo apt install ./Aurral-App-0.1.5-linux-amd64.deb
+sudo apt install ./Aurral-App-0.1.6-linux-amd64.deb
 ```
 
 Open **Aurral App** from your application menu.
@@ -25,8 +25,8 @@ Open **Aurral App** from your application menu.
 In the file's properties, allow it to run as a program, then open it. You can also run these commands in the download folder.
 
 ```sh
-chmod +x Aurral-App-0.1.5-linux-x86_64.AppImage
-./Aurral-App-0.1.5-linux-x86_64.AppImage
+chmod +x Aurral-App-0.1.6-linux-x86_64.AppImage
+./Aurral-App-0.1.6-linux-x86_64.AppImage
 ```
 
 The AppImage uses a runtime that avoids a dependency on FUSE 2. On Ubuntu and Mint, the Debian package also supplies the desktop integration needed by their application security settings.
@@ -38,7 +38,7 @@ On Bazzite, Gear Lever can add an AppImage to the application menu. On SteamOS, 
 With Flatpak installed, open the `.flatpak` file in your software center or install it from the download folder.
 
 ```sh
-flatpak install --user ./Aurral-App-0.1.5-linux-x86_64.flatpak
+flatpak install --user ./Aurral-App-0.1.6-linux-x86_64.flatpak
 ```
 
 The first install may download the Freedesktop runtime from Flathub. Open **Aurral App** from your application menu. The Flatpak keeps its own server settings and sign-in. To update a bundle installation, install the newer `.flatpak` file.
@@ -48,6 +48,8 @@ The first install may download the Freedesktop runtime from Flathub. Open **Aurr
 Enter your Aurral server URL, then sign in. Aurral App remembers the URL and session.
 
 Press **Ctrl + ,** to change servers, or tap **Alt** and open **Settings**. The tray menu has **Show Aurral**, **Stop / Play**, **Previous**, **Next**, and **Quit**.
+
+During playback, KDE Plasma can show **Previous**, **Play/Pause**, and **Next** in the taskbar preview. Other desktops may show the controls in their system media panel. The Debian and Flatpak packages also add those three actions to the Aurral launcher’s right-click menu.
 
 Closing the window keeps playback running. Turn off **Settings → Minimize to Tray** if you want closing the window to quit. Desktop environments control whether a tray icon appears. If it is hidden, launching Aurral App again restores the existing window. For Steam Gaming Mode, turn off **Minimize to Tray** while in Desktop Mode.
 

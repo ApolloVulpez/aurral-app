@@ -39,11 +39,15 @@ function installMediaBridge(serverUrl) {
         timestamps: timing?.metadata === metadata ? { start: timing.start, end: timing.end } : null };
     }
     if (command === "state") {
+      const track = session.metadata;
       return {
         playing,
         canToggle: handlers.has(toggle),
         canPrevious: handlers.has("previoustrack"),
         canNext: handlers.has("nexttrack"),
+        canPlay: handlers.has("play"),
+        canPause: handlers.has("pause"),
+        track: track ? { title: track.title, artist: track.artist, album: track.album } : null,
       };
     }
 

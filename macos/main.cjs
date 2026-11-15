@@ -16,6 +16,11 @@ const connectTimeoutMs = 15_000;
 const isLinux = process.platform === "linux";
 const isFlatpak = isLinux && Boolean(process.env.FLATPAK_ID);
 const windowIcon = isLinux ? path.join(__dirname, "assets", "icon.png") : undefined;
+const launcherPlaybackActions = new Set(["previoustrack", "toggle", "nexttrack"]);
+const playbackArgument = "--aurral-playback=";
+const launcherPlaybackAction = isLinux
+  ? process.argv.find(arg => arg.startsWith(playbackArgument))?.slice(playbackArgument.length)
+  : undefined;
 let settings;
 let settingsFile;
 let player;
@@ -24,13 +29,19 @@ let setup;
 let tray;
 let quitting = false;
 let opening = false;
-let trayRefresh;
-let refreshingTray = false;
-let lastTrayState;
+let playbackRefresh;
+let refreshingPlaybackControls = false;
+let lastPlaybackState;
 let availableUpdate;
 let updateStatus = "";
 let discordRefresh;
 let refreshingDiscord = false;
+let mediaControls;
+
+if (isLinux) {
+  const disabledFeatures = app.commandLine.getSwitchValue("disable-features");
+  app.commandLine.appendSwitch("disable-features", [disabledFeatures, "HardwareMediaKeyHandling"].filter(Boolean).join(","));
+}
 
 function parseServer(address) {
   if (typeof address !== "string") return null;
@@ -432,18 +443,30 @@ function buildTrayMenu(state) {
   ]);
 }
 
-async function refreshLinuxTray() {
-  if (refreshingTray || quitting) return;
-  refreshingTray = true;
+function buildDockMenu(state) {
+  return Menu.buildFromTemplate([
+    { label: "Previous Track", enabled: Boolean(state?.canPrevious), click: () => playback("previoustrack") },
+    { label: state?.playing ? "Pause" : "Play", enabled: Boolean(state?.canToggle), click: () => playback("toggle") },
+    { label: "Next Track", enabled: Boolean(state?.canNext), click: () => playback("nexttrack") },
+  ]);
+}
+
+async function refreshPlaybackControls() {
+  if (refreshingPlaybackControls || quitting) return;
+  refreshingPlaybackControls = true;
   try {
+    const page = playerPage;
     const state = await playback("state");
+    if (quitting || page !== playerPage) return;
+    mediaControls?.update(state);
     const signature = JSON.stringify(state);
-    if (tray && !quitting && signature !== lastTrayState) {
-      tray.setContextMenu(buildTrayMenu(state));
-      lastTrayState = signature;
-    }
+    if (signature === lastPlaybackState) return;
+
+    if (isLinux) tray.setContextMenu(buildTrayMenu(state));
+    else app.dock.setMenu(buildDockMenu(state));
+    lastPlaybackState = signature;
   } finally {
-    refreshingTray = false;
+    refreshingPlaybackControls = false;
   }
 }
 
@@ -481,18 +504,23 @@ function setAppMenu() {
   ]));
 }
 
-if (!app.requestSingleInstanceLock()) {
+if (!app.requestSingleInstanceLock({ playbackAction: launcherPlaybackAction }) || launcherPlaybackAction !== undefined) {
   app.quit();
 } else {
-  app.on("second-instance", showAurral);
+  app.on("second-instance", (_event, _argv, _directory, data) => {
+    const action = data?.playbackAction;
+    if (action === undefined) showAurral();
+    else if (isLinux && launcherPlaybackActions.has(action)) void playback(action);
+  });
   app.on("activate", showAurral);
   app.on("window-all-closed", () => {
     if (!opening && settings?.minimizeToTray === false) app.quit();
   });
   app.on("before-quit", () => {
     quitting = true;
-    clearInterval(trayRefresh);
+    clearInterval(playbackRefresh);
     clearInterval(discordRefresh);
+    mediaControls?.disconnect();
     discord.disconnect();
   });
   app.whenReady().then(async () => {
@@ -521,14 +549,16 @@ if (!app.requestSingleInstanceLock()) {
     void checkForAppUpdate(false);
     tray = new Tray(path.join(__dirname, "assets", isLinux ? "icon.png" : "TrayTemplate.png"));
     tray.setToolTip("Aurral App");
-    if (isLinux) {
-      await refreshLinuxTray();
-      trayRefresh = setInterval(refreshLinuxTray, 1000);
-      trayRefresh.unref();
-    } else {
+    if (!isLinux) {
       tray.on("click", showTrayMenu);
       tray.on("right-click", showTrayMenu);
+    } else {
+      const { LinuxMediaControls } = require("./media-controls.cjs");
+      mediaControls = new LinuxMediaControls(require("./package.json").desktopName, playback, showAurral);
     }
+    await refreshPlaybackControls();
+    playbackRefresh = setInterval(refreshPlaybackControls, 1000);
+    playbackRefresh.unref();
     const server = parseServer(settings.serverUrl);
     if ((!server || await openServer(server)) && !quitting) openSetup();
   }).catch(error => {

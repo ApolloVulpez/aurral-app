@@ -1,12 +1,15 @@
 {
   "name": "aurral-linux-build",
   "private": true,
-  "version": "0.1.5",
+  "version": "0.1.6",
   "scripts": {
     "build": "node build.cjs",
     "build:flatpak": "bash build-flatpak.sh"
   },
   "devDependencies": {
     "electron-builder": "26.18.0"
+  },
+  "dependencies": {
+    "@jellybrick/dbus-next": "0.11.4"
   }
 }

@@ -8,7 +8,7 @@ async function buildLinux() {
   const shared = path.join(root, "macos");
   const staging = path.join(root, "obj", flatpak ? "flatpak-source" : "linux-source");
   const output = flatpak ? path.join(root, "obj", "flatpak-electron") : path.join(root, "dist", "linux");
-  const version = require("./package.json").version;
+  const { version, dependencies } = require("./package.json");
   const electronVersion = require("../macos/package.json").devDependencies.electron;
 
   await fs.mkdir(staging, { recursive: true });
@@ -19,6 +19,7 @@ async function buildLinux() {
   ]) {
     await fs.copyFile(path.join(shared, file), path.join(staging, file));
   }
+  await fs.copyFile(path.join(__dirname, "media-controls.cjs"), path.join(staging, "media-controls.cjs"));
   await fs.cp(path.join(shared, "assets"), path.join(staging, "assets"), { recursive: true });
   await fs.copyFile(path.join(root, "LICENSE"), path.join(staging, "LICENSE"));
   await fs.writeFile(path.join(staging, "package.json"), JSON.stringify({
@@ -26,6 +27,7 @@ async function buildLinux() {
     productName: "Aurral App",
     desktopName: "io.github.apollovulpez.aurral-app.desktop",
     version,
+    dependencies,
     main: "main.cjs",
     description: "A desktop front end for your Aurral server.",
     homepage: "https://github.com/ApolloVulpez/aurral-app",
@@ -62,6 +64,16 @@ async function buildLinux() {
             Name: "Aurral App",
             Comment: "Connect to your Aurral music server",
             Categories: "AudioVideo;Audio;Player;",
+          },
+        },
+      },
+      deb: {
+        desktop: {
+          entry: { Actions: "PreviousTrack;PlayPause;NextTrack;" },
+          desktopActions: {
+            PreviousTrack: { Name: "Previous Track", Exec: '"/opt/Aurral App/aurral-app" --aurral-playback=previoustrack' },
+            PlayPause: { Name: "Play/Pause", Exec: '"/opt/Aurral App/aurral-app" --aurral-playback=toggle' },
+            NextTrack: { Name: "Next Track", Exec: '"/opt/Aurral App/aurral-app" --aurral-playback=nexttrack' },
           },
         },
       },
