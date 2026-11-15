@@ -31,6 +31,7 @@ internal sealed class MainWindow : Form
     private readonly CaptionBar captionBar;
     private readonly ToolTip captionToolTips = new();
     private readonly TrayControls tray;
+    private readonly TaskbarPlayback taskbarPlayback;
     private string serverAddress = "";
     private ulong? openingNavigation;
     private bool openingServer;
@@ -54,6 +55,7 @@ internal sealed class MainWindow : Form
         discordLinks.Checked = ReadPreference(DiscordLinksFile) != "false";
         discordLinks.Enabled = discordActivity.Checked;
         tray = new TrayControls(Icon, ShowExistingWindow, Quit);
+        taskbarPlayback = new TaskbarPlayback(this, tray);
         settingsMenu.DropDownItems.AddRange([changeServer, minimizeToTray, new ToolStripSeparator(), discordActivity, discordLinks]);
         settingsBar.Items.Add(settingsMenu);
         captionBar = new CaptionBar(this);
@@ -120,6 +122,8 @@ internal sealed class MainWindow : Form
 
     protected override void WndProc(ref Message m)
     {
+        if (taskbarPlayback?.ProcessMessage(ref m) == true) return;
+
         if (captionBar?.ExtendsFrame == true && m.Msg == CaptionBar.CalculateClientSize && m.WParam != IntPtr.Zero)
         {
             var top = Marshal.ReadInt32(m.LParam, sizeof(int));
@@ -152,6 +156,7 @@ internal sealed class MainWindow : Form
             discordTimer.Dispose();
             discord.Dispose();
             captionToolTips.Dispose();
+            taskbarPlayback.Dispose();
             tray.Dispose();
         }
         base.Dispose(disposing);

@@ -114,16 +114,22 @@ internal sealed class TrayControls : IDisposable
     private async Task RefreshMenuAsync()
     {
         UpdateMenu(null);
+        var state = await ReadPlaybackStateAsync();
+        if (!menu.IsDisposed) UpdateMenu(state);
+    }
+
+    internal async Task<PlaybackState?> ReadPlaybackStateAsync()
+    {
         var result = await ExecuteAsync("state");
-        if (menu.IsDisposed || !PlaybackAvailable || result is null) return;
+        if (!PlaybackAvailable || result is null) return null;
 
         try
         {
-            UpdateMenu(JsonSerializer.Deserialize<PlaybackState>(result));
+            return JsonSerializer.Deserialize<PlaybackState>(result);
         }
         catch (JsonException)
         {
-            // The page has no usable media state.
+            return null;
         }
     }
 
@@ -147,7 +153,7 @@ internal sealed class TrayControls : IDisposable
         catch (JsonException) { return null; }
     }
 
-    private Task<string?> ExecuteAsync(string command) =>
+    internal Task<string?> ExecuteAsync(string command) =>
         ExecuteScriptAsync($"window.__aurralTrayMedia?.({JsonSerializer.Serialize(command)})");
 
     private async Task<string?> ExecuteScriptAsync(string script)
@@ -170,5 +176,5 @@ internal sealed class TrayControls : IDisposable
         menu.Dispose();
     }
 
-    private sealed record PlaybackState(bool Playing, bool CanToggle, bool CanPrevious, bool CanNext);
+    internal sealed record PlaybackState(bool Playing, bool CanToggle, bool CanPrevious, bool CanNext);
 }
