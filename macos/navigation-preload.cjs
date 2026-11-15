@@ -4,6 +4,13 @@ window.addEventListener("DOMContentLoaded", () => {
   const back = document.getElementById("back");
   const forward = document.getElementById("forward");
   const update = document.getElementById("update");
+  const settings = document.getElementById("settings");
+
+  function toggleSettings() {
+    const { left, right } = settings.getBoundingClientRect();
+    const alignLeft = document.body.classList.contains("controls-left");
+    ipcRenderer.send("aurral:toggle-settings", { x: alignLeft ? left : right, alignLeft });
+  }
 
   if (process.platform === "darwin") {
     document.body.classList.add("mac", "controls-left");
@@ -19,6 +26,9 @@ window.addEventListener("DOMContentLoaded", () => {
   back.addEventListener("click", () => ipcRenderer.send("aurral:navigate-history", "back"));
   forward.addEventListener("click", () => ipcRenderer.send("aurral:navigate-history", "forward"));
   update.addEventListener("click", () => ipcRenderer.send("aurral:check-for-update"));
+  settings.addEventListener("click", toggleSettings);
+  ipcRenderer.on("aurral:settings-shortcut", toggleSettings);
+  ipcRenderer.on("aurral:settings-visibility", (_event, open) => settings.setAttribute("aria-expanded", String(open)));
   ipcRenderer.on("aurral:history-state", (_event, state) => {
     back.disabled = !state.back;
     forward.disabled = !state.forward;

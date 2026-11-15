@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en" class="settings-overlay">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; base-uri 'none'">
+  <title>Settings</title>
+  <link rel="stylesheet" href="navigation.css">
+</head>
+<body>
+  <div class="settings-popup" role="menu" aria-label="Settings" hidden>
+    <button type="button" role="menuitem" data-setting="change-server">
+      <svg class="settings-icon" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5"/><ellipse cx="8" cy="8" rx="3" ry="6.5"/><path d="M1.5 8h13"/></svg>
+      <span>Change server…</span>
+    </button>
+    <button type="button" role="menuitemcheckbox" aria-checked="false" data-setting="minimizeToTray">
+      <svg class="settings-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v7M5 6l3 3 3-3M2 9v4.5h12V9"/></svg>
+      <span>Minimize to tray</span>
+    </button>
+    <hr role="separator">
+    <button type="button" role="menuitemcheckbox" aria-checked="false" data-setting="discordPresence">
+      <svg class="settings-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 3h12v8H7l-3 3v-3H2zM5 7h6"/></svg>
+      <span>Discord Rich Presence</span>
+    </button>
+    <button type="button" role="menuitemcheckbox" aria-checked="false" data-setting="discordListenLinks">
+      <svg class="settings-icon" viewBox="0 0 16 16" aria-hidden="true"><circle cx="3" cy="8" r="2"/><circle cx="12.5" cy="3.5" r="2"/><circle cx="12.5" cy="12.5" r="2"/><path d="m4.75 7.1 5.95-2.7M4.75 8.9l5.95 2.7"/></svg>
+      <span>Share Listen Links on Discord</span>
+    </button>
+  </div>
+</body>
+</html>

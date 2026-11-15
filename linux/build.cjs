@@ -16,6 +16,7 @@ async function buildLinux() {
     "main.cjs", "media-preload.cjs", "updates.cjs", "discord-presence.cjs", "discord-artwork.cjs", "discord-activity.js",
     "setup-preload.cjs", "setup.js", "setup.css", "setup.html",
     "navigation-preload.cjs", "navigation.css", "navigation.html",
+    "settings-preload.cjs", "settings.html",
   ]) {
     await fs.copyFile(path.join(shared, file), path.join(staging, file));
   }

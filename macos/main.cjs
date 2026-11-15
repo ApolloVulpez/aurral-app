@@ -11,6 +11,7 @@ const discordArtwork = new DiscordArtwork();
 
 const setupFile = path.join(__dirname, "setup.html");
 const navigationFile = path.join(__dirname, "navigation.html");
+const settingsMenuFile = path.join(__dirname, "settings.html");
 const navigationHeight = 36;
 const connectTimeoutMs = 15_000;
 const isLinux = process.platform === "linux";
@@ -257,6 +258,97 @@ async function checkForAppUpdate(install) {
   }
 }
 
+function chooseSetting(action) {
+  if (action === "change-server") {
+    openSetup();
+    return;
+  }
+  if (action !== "minimizeToTray" && action !== "discordPresence" && action !== "discordListenLinks") return;
+  if (action === "discordListenLinks" && !settings.discordPresence) return;
+
+  settings[action] = !settings[action];
+  saveSettings();
+  if (action === "discordPresence") applyDiscordSettings();
+  if (action === "discordListenLinks") void refreshDiscord();
+}
+
+function requestSettings() {
+  if (!setup && player?.isVisible()) player.webContents.send("aurral:settings-shortcut");
+}
+
+function attachSettingsPopup(window, page) {
+  const toolbar = window.webContents;
+  let overlay;
+  let loaded;
+  let anchor;
+  let focusBeforePopup;
+
+  function dismiss(restoreFocus) {
+    if (!anchor) return;
+    anchor = null;
+    if (window.isDestroyed() || toolbar.isDestroyed()) return;
+    window.contentView.removeChildView(overlay);
+    toolbar.send("aurral:settings-visibility", false);
+    if (restoreFocus && focusBeforePopup && !focusBeforePopup.isDestroyed()) focusBeforePopup.focus();
+    focusBeforePopup = null;
+  }
+
+  toolbar.ipc.on("aurral:toggle-settings", async (event, position) => {
+    if (event.senderFrame !== toolbar.mainFrame || window !== player || setup || !Number.isFinite(position?.x)) return;
+    if (anchor) return dismiss(true);
+
+    const requested = { x: position.x, alignLeft: position.alignLeft === true, y: navigationHeight + 4 };
+    anchor = requested;
+    focusBeforePopup = page.isFocused() ? page : toolbar;
+    if (!overlay) {
+      overlay = new WebContentsView({
+        webPreferences: { sandbox: true, contextIsolation: true, preload: path.join(__dirname, "settings-preload.cjs") },
+      });
+      overlay.setBackgroundColor("#00000000");
+      const contents = overlay.webContents;
+      contents.on("will-navigate", event => event.preventDefault());
+      contents.setWindowOpenHandler(() => ({ action: "deny" }));
+      contents.ipc.on("aurral:dismiss-settings", event => {
+        if (event.senderFrame === contents.mainFrame) dismiss(true);
+      });
+      contents.ipc.on("aurral:choose-setting", (event, action) => {
+        if (event.senderFrame !== contents.mainFrame || window !== player || !anchor) return;
+        dismiss(true);
+        chooseSetting(action);
+      });
+      loaded = contents.loadFile(settingsMenuFile).then(() => true, () => false);
+    }
+
+    const ready = await loaded;
+    if (requested !== anchor || window.isDestroyed()) return;
+    if (window !== player || !window.isVisible() || setup) return dismiss(false);
+    if (!ready) {
+      dismiss(true);
+      overlay.webContents.close();
+      overlay = null;
+      return;
+    }
+
+    const [width, height] = window.getContentSize();
+    overlay.setBounds({ x: 0, y: 0, width, height });
+    window.contentView.addChildView(overlay);
+    overlay.webContents.send("aurral:settings-state", {
+      anchor,
+      state: { minimizeToTray: settings.minimizeToTray, discordPresence: settings.discordPresence,
+        discordListenLinks: settings.discordListenLinks },
+    });
+    toolbar.send("aurral:settings-visibility", true);
+    overlay.webContents.focus();
+  });
+
+  window.on("blur", () => dismiss(false));
+  window.on("hide", () => dismiss(false));
+  window.on("resize", () => dismiss(true));
+  window.once("closed", () => {
+    if (overlay && !overlay.webContents.isDestroyed()) overlay.webContents.close();
+  });
+}
+
 function attachNavigation(window, view) {
   const page = view.webContents;
   const toolbar = window.webContents;
@@ -265,6 +357,7 @@ function attachNavigation(window, view) {
   });
 
   window.contentView.addChildView(view);
+  attachSettingsPopup(window, page);
   view.setBackgroundColor("#11141b");
   const resize = () => {
     const [width, height] = window.getContentSize();
@@ -291,7 +384,24 @@ function attachNavigation(window, view) {
     if (isMainFrame) updateButtons();
   });
 
+  let altPressedAlone = false;
+  window.on("blur", () => { altPressedAlone = false; });
   const onInput = (event, input) => {
+    if (isLinux) {
+      const altKey = input.key === "Alt" && !input.control && !input.meta && !input.shift;
+      if (input.type === "keyUp" && altKey && altPressedAlone) {
+        altPressedAlone = false;
+        event.preventDefault();
+        requestSettings();
+        return;
+      }
+      if (input.type === "keyDown") altPressedAlone = altKey;
+      if (input.type === "keyDown" && input.key === "," && input.control && !input.meta && !input.alt && !input.shift) {
+        event.preventDefault();
+        if (!input.isAutoRepeat) requestSettings();
+        return;
+      }
+    }
     if (input.type !== "keyDown" || input.control || input.shift) return;
     const modifier = isLinux ? input.alt && !input.meta : input.meta && !input.alt;
     if (!modifier) return;
@@ -471,30 +581,16 @@ async function refreshPlaybackControls() {
 }
 
 function setAppMenu() {
+  if (isLinux) {
+    Menu.setApplicationMenu(null);
+    return;
+  }
   Menu.setApplicationMenu(Menu.buildFromTemplate([
     {
-      label: isLinux ? "&Settings" : "Aurral App",
+      label: "Aurral App",
       submenu: [
         { label: "Show Aurral", click: showAurral },
-        { label: "Change Server…", accelerator: "CommandOrControl+,", click: openSetup },
-        { label: "Check for App Updates…", click: () => checkForAppUpdate(true) },
-        { label: "Minimize to Tray", type: "checkbox", checked: settings.minimizeToTray, click: item => {
-          settings.minimizeToTray = item.checked;
-          saveSettings();
-        } },
-        { type: "separator" },
-        { label: "Discord Rich Presence", type: "checkbox", checked: settings.discordPresence, click: item => {
-          settings.discordPresence = item.checked;
-          saveSettings();
-          applyDiscordSettings();
-          setAppMenu();
-        } },
-        { label: "Share Listen Links on Discord", type: "checkbox", checked: settings.discordListenLinks,
-          enabled: settings.discordPresence, click: item => {
-            settings.discordListenLinks = item.checked;
-            saveSettings();
-            void refreshDiscord();
-          } },
+        { label: "Settings…", accelerator: "Command+,", click: requestSettings },
         { type: "separator" },
         { role: "quit" },
       ],

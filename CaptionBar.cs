@@ -16,6 +16,7 @@ internal sealed class CaptionBar : Panel
     internal Button Back { get; } = new CaptionButton(CaptionIcon.Back, "Back") { Enabled = false };
     internal Button Forward { get; } = new CaptionButton(CaptionIcon.Forward, "Forward") { Enabled = false };
     internal Button UpdateButton { get; } = new CaptionButton(CaptionIcon.Update, "Check for app updates");
+    internal Button SettingsButton { get; } = new CaptionButton(CaptionIcon.Settings, "Settings");
     internal bool ExtendsFrame { get; private set; }
 
     internal CaptionBar(Form window)
@@ -24,7 +25,7 @@ internal sealed class CaptionBar : Panel
         Dock = DockStyle.Top;
         Height = 36;
         BackColor = Color.Black;
-        Controls.AddRange([UpdateButton, Back, Forward]);
+        Controls.AddRange([Back, Forward, UpdateButton, SettingsButton]);
         window.TextChanged += (_, _) => Invalidate();
     }
 
@@ -65,7 +66,7 @@ internal sealed class CaptionBar : Panel
         var coordinates = message.LParam.ToInt64();
         var point = PointToClient(new Point(unchecked((short)coordinates), unchecked((short)(coordinates >> 16))));
         if (!ClientRectangle.Contains(point) || UpdateButton.Bounds.Contains(point) ||
-            Back.Bounds.Contains(point) || Forward.Bounds.Contains(point)) return;
+            SettingsButton.Bounds.Contains(point) || Back.Bounds.Contains(point) || Forward.Bounds.Contains(point)) return;
 
         if (!IsZoomed(message.HWnd) && point.Y < ResizeBorderHeight)
             message.Result = 12; // HTTOP
@@ -97,9 +98,10 @@ internal sealed class CaptionBar : Panel
         var width = LogicalToDeviceUnits(32);
         var height = LogicalToDeviceUnits(26);
         var top = Math.Clamp(centerY - height / 2, 0, Math.Max(0, ClientSize.Height - height));
-        Forward.SetBounds(right - width, top, width, height);
-        Back.SetBounds(right - width * 2, top, width, height);
-        UpdateButton.SetBounds(right - width * 3, top, width, height);
+        Back.SetBounds(right - width * 4, top, width, height);
+        Forward.SetBounds(right - width * 3, top, width, height);
+        UpdateButton.SetBounds(right - width * 2, top, width, height);
+        SettingsButton.SetBounds(right - width, top, width, height);
         Invalidate();
     }
 
@@ -113,7 +115,7 @@ internal sealed class CaptionBar : Panel
             e.Graphics.DrawIcon(icon, new Rectangle(LogicalToDeviceUnits(8), (Height - iconSize) / 2, iconSize, iconSize));
 
         var titleLeft = LogicalToDeviceUnits(31);
-        var titleWidth = Math.Max(0, UpdateButton.Left - titleLeft - LogicalToDeviceUnits(8));
+        var titleWidth = Math.Max(0, Back.Left - titleLeft - LogicalToDeviceUnits(8));
         TextRenderer.DrawText(e.Graphics, window.Text, Font, new Rectangle(titleLeft, 0, titleWidth, Height),
             Color.White, TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.EndEllipsis |
             TextFormatFlags.NoPrefix);
@@ -129,7 +131,7 @@ internal sealed class CaptionBar : Panel
         base.WndProc(ref m);
     }
 
-    private enum CaptionIcon { Back, Forward, Update }
+    private enum CaptionIcon { Back, Forward, Update, Settings }
 
     private sealed class CaptionButton : Button
     {
@@ -140,7 +142,7 @@ internal sealed class CaptionBar : Panel
             this.icon = icon;
             SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer, true);
             AccessibleName = label;
-            ForeColor = icon == CaptionIcon.Update ? Color.Gray : Color.White;
+            ForeColor = icon is CaptionIcon.Update or CaptionIcon.Settings ? Color.Gray : Color.White;
             FlatStyle = FlatStyle.Flat;
             FlatAppearance.BorderSize = 0;
             UseVisualStyleBackColor = false;
@@ -170,6 +172,14 @@ internal sealed class CaptionBar : Panel
                 ]);
                 e.Graphics.DrawLine(pen, centerX - halfHeight, centerY + halfHeight,
                     centerX + halfHeight, centerY + halfHeight);
+            }
+            else if (icon == CaptionIcon.Settings)
+            {
+                for (var row = -1; row <= 1; row++)
+                {
+                    var y = centerY + row * halfHeight;
+                    e.Graphics.DrawLine(pen, centerX - 5 * scale, y, centerX + 5 * scale, y);
+                }
             }
             else
             {

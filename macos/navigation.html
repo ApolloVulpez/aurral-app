@@ -9,9 +9,18 @@
 <body>
   <nav aria-label="App controls">
     <span class="title">Aurral App</span>
-    <button id="update" type="button" aria-label="Check for app updates" title="Check for app updates"><span class="download-icon" aria-hidden="true"></span></button>
-    <button id="back" type="button" aria-label="Back" title="Back" disabled>←</button>
-    <button id="forward" type="button" aria-label="Forward" title="Forward" disabled>→</button>
+    <button id="back" type="button" aria-label="Back" title="Back" disabled>
+      <svg class="caption-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="m11 3-6 5 6 5"/></svg>
+    </button>
+    <button id="forward" type="button" aria-label="Forward" title="Forward" disabled>
+      <svg class="caption-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="m5 3 6 5-6 5"/></svg>
+    </button>
+    <button id="update" type="button" aria-label="Check for app updates" title="Check for app updates">
+      <svg class="caption-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v6M5 6l3 3 3-3M3 13h10"/></svg>
+    </button>
+    <button id="settings" type="button" aria-label="Settings" aria-haspopup="menu" aria-expanded="false" title="Settings">
+      <svg class="caption-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3h10M3 8h10M3 13h10"/></svg>
+    </button>
   </nav>
 </body>
 </html>

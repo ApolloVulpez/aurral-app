@@ -19,12 +19,11 @@ internal sealed class MainWindow : Form
         Dock = DockStyle.Fill,
         DefaultBackgroundColor = ContentBackground,
     };
-    private readonly MenuStrip settingsBar = new() { Visible = false };
-    private readonly ToolStripMenuItem settingsMenu = new("&Settings");
-    private readonly ToolStripMenuItem changeServer = new("Change &server…") { Enabled = false };
-    private readonly ToolStripMenuItem minimizeToTray = new("Minimize to &tray") { CheckOnClick = true };
-    private readonly ToolStripMenuItem discordActivity = new("Discord Rich Presence") { CheckOnClick = true };
-    private readonly ToolStripMenuItem discordLinks = new("Share Listen Links on Discord") { CheckOnClick = true };
+    private readonly ContextMenuStrip settingsMenu = new SettingsPopup();
+    private readonly ToolStripMenuItem changeServer = new SettingsPopup.Item("Change server…", SettingsPopup.Icon.Server) { Enabled = false };
+    private readonly ToolStripMenuItem minimizeToTray = new SettingsPopup.Item("Minimize to tray", SettingsPopup.Icon.Tray) { CheckOnClick = true };
+    private readonly ToolStripMenuItem discordActivity = new SettingsPopup.Item("Discord Rich Presence", SettingsPopup.Icon.Chat) { CheckOnClick = true };
+    private readonly ToolStripMenuItem discordLinks = new SettingsPopup.Item("Share Listen Links on Discord", SettingsPopup.Icon.Share) { CheckOnClick = true };
     private readonly DiscordPresence discord = new(DiscordPresence.ReadResource("Aurral.DiscordApplicationId.txt"));
     private readonly DiscordArtwork discordArtwork = new();
     private readonly System.Windows.Forms.Timer discordTimer = new() { Interval = 2000 };
@@ -56,12 +55,13 @@ internal sealed class MainWindow : Form
         discordLinks.Enabled = discordActivity.Checked;
         tray = new TrayControls(Icon, ShowExistingWindow, Quit);
         taskbarPlayback = new TaskbarPlayback(this, tray);
-        settingsMenu.DropDownItems.AddRange([changeServer, minimizeToTray, new ToolStripSeparator(), discordActivity, discordLinks]);
-        settingsBar.Items.Add(settingsMenu);
+        settingsMenu.Items.AddRange([changeServer, minimizeToTray, new ToolStripSeparator(), discordActivity, discordLinks]);
         captionBar = new CaptionBar(this);
         captionToolTips.SetToolTip(captionBar.Back, "Back");
         captionToolTips.SetToolTip(captionBar.Forward, "Forward");
         captionToolTips.SetToolTip(captionBar.UpdateButton, "Check for app updates");
+        captionToolTips.SetToolTip(captionBar.SettingsButton, "Settings");
+        captionBar.SettingsButton.Click += (_, _) => ToggleSettings();
         captionBar.UpdateButton.Click += async (_, _) => await CheckForAppUpdateAsync(install: true);
         captionBar.Back.Click += (_, _) =>
         {
@@ -72,25 +72,16 @@ internal sealed class MainWindow : Form
             if (browser.CanGoForward) browser.GoForward();
         };
         Controls.Add(browser);
-        Controls.Add(settingsBar);
         Controls.Add(captionBar);
 
         KeyDown += TrackAlt;
-        KeyUp += ToggleSettingsBarOnAlt;
+        KeyUp += OpenSettingsOnAlt;
         browser.KeyDown += TrackAlt;
-        browser.KeyUp += ToggleSettingsBarOnAlt;
-        browser.Enter += (_, _) => settingsBar.Hide();
-        changeServer.Click += async (_, _) =>
-        {
-            settingsBar.Hide();
-            await PromptForServerAsync();
-        };
+        browser.KeyUp += OpenSettingsOnAlt;
+        changeServer.Click += async (_, _) => await PromptForServerAsync();
         minimizeToTray.Click += (_, _) =>
-        {
-            settingsBar.Hide();
             SavePreference(MinimizeToTrayFile, minimizeToTray.Checked ? "true" : "false",
                 "Aurral couldn't remember the tray setting for next time.");
-        };
         discordActivity.Click += async (_, _) => await ToggleDiscordAsync();
         discordLinks.Click += (_, _) =>
             SavePreference(DiscordLinksFile, discordLinks.Checked ? "true" : "false", "Aurral couldn't save the Discord listen-link setting.");
@@ -156,6 +147,7 @@ internal sealed class MainWindow : Form
             discordTimer.Dispose();
             discord.Dispose();
             captionToolTips.Dispose();
+            settingsMenu.Dispose();
             taskbarPlayback.Dispose();
             tray.Dispose();
         }
@@ -169,7 +161,7 @@ internal sealed class MainWindow : Form
             quitting || !tray.Visible || !minimizeToTray.Checked) return;
 
         e.Cancel = true;
-        settingsBar.Hide();
+        settingsMenu.Close();
         Hide();
     }
 
@@ -286,29 +278,30 @@ internal sealed class MainWindow : Form
     private void TrackAlt(object? sender, KeyEventArgs e) =>
         altPressedAlone = e.KeyCode == Keys.Menu && !e.Control && !e.Shift;
 
-    private void ToggleSettingsBarOnAlt(object? sender, KeyEventArgs e)
+    private void OpenSettingsOnAlt(object? sender, KeyEventArgs e)
     {
         if (e.KeyCode != Keys.Menu || !altPressedAlone) return;
 
         altPressedAlone = false;
-        if (!tray.Visible) return;
-
         e.Handled = true;
         // Wait until the WebView2 keyboard callback returns before moving focus.
         BeginInvoke(() =>
         {
-            if (!ContainsFocus) return;
-            if (settingsBar.Visible)
-            {
-                settingsBar.Hide();
-                browser.Focus();
-                return;
-            }
-
-            settingsBar.Show();
-            settingsBar.Focus();
-            settingsMenu.Select();
+            if (ContainsFocus) ToggleSettings();
         });
+    }
+
+    private void ToggleSettings()
+    {
+        if (settingsMenu.Visible)
+        {
+            settingsMenu.Close();
+            return;
+        }
+
+        var button = captionBar.SettingsButton;
+        var y = captionBar.Height - button.Top + captionBar.LogicalToDeviceUnits(4);
+        settingsMenu.Show(button, new Point(button.Width, y), ToolStripDropDownDirection.BelowLeft);
     }
 
     private string AddressFile => Path.Combine(appData, "server.txt");
@@ -400,7 +393,7 @@ internal sealed class MainWindow : Form
             var reason = args.HttpStatusCode >= 400 ? $"HTTP {args.HttpStatusCode}" : args.WebErrorStatus.ToString();
             // Queue the dialog after WebView2 finishes its event callback.
             BeginInvoke(() => MessageBox.Show(this,
-                $"Couldn't open {serverAddress}\n\n{reason}\n\nPress Alt and choose Settings → Change server to try again.",
+                $"Couldn't open {serverAddress}\n\n{reason}\n\nOpen the settings menu beside the update button and choose Change server to try again.",
                 "Connection failed", MessageBoxButtons.OK, MessageBoxIcon.Warning));
             return;
         }
