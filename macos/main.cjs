@@ -14,6 +14,7 @@ const navigationFile = path.join(__dirname, "navigation.html");
 const navigationHeight = 36;
 const connectTimeoutMs = 15_000;
 const isLinux = process.platform === "linux";
+const isFlatpak = isLinux && Boolean(process.env.FLATPAK_ID);
 const windowIcon = isLinux ? path.join(__dirname, "assets", "icon.png") : undefined;
 let settings;
 let settingsFile;
@@ -164,7 +165,8 @@ function sendUpdateStatus(contents = player?.webContents) {
   contents.send("aurral:update-state", {
     busy: Boolean(updateStatus),
     available: Boolean(availableUpdate),
-    label: updateStatus || (availableUpdate ? `Update to Aurral App ${availableUpdate.version}` : "Check for app updates"),
+    label: isFlatpak ? "About Flatpak updates" :
+      updateStatus || (availableUpdate ? `Update to Aurral App ${availableUpdate.version}` : "Check for app updates"),
   });
 }
 
@@ -199,6 +201,11 @@ function restartAfterUpdate(executable, appImage) {
 
 async function checkForAppUpdate(install) {
   if (updateStatus || quitting) return;
+  if (isFlatpak) {
+    if (install) await showUpdateMessage("Aurral App updates through Flatpak.",
+      "Install a newer Aurral App .flatpak bundle or update through your software center if you installed from a Flatpak repository.");
+    return;
+  }
   if (!app.isPackaged) {
     if (install) await showUpdateMessage("App updates are available in packaged builds.");
     return;

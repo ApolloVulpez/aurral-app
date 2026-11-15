@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Aurral App
+Comment=Connect to your Aurral music server
+Exec=aurral-app
+Icon=io.github.apollovulpez.aurral-app
+StartupWMClass=io.github.apollovulpez.aurral-app
+Terminal=false
+Categories=AudioVideo;Audio;Player;

@@ -3,10 +3,11 @@ const fs = require("node:fs/promises");
 const path = require("node:path");
 
 async function buildLinux() {
+  const flatpak = process.argv.includes("--flatpak");
   const root = path.resolve(__dirname, "..");
   const shared = path.join(root, "macos");
-  const staging = path.join(root, "obj", "linux-source");
-  const output = path.join(root, "dist", "linux");
+  const staging = path.join(root, "obj", flatpak ? "flatpak-source" : "linux-source");
+  const output = flatpak ? path.join(root, "obj", "flatpak-electron") : path.join(root, "dist", "linux");
   const version = require("./package.json").version;
   const electronVersion = require("../macos/package.json").devDependencies.electron;
 
@@ -33,7 +34,7 @@ async function buildLinux() {
   }, null, 2));
 
   await build({
-    targets: Platform.LINUX.createTarget(["deb", "AppImage"], Arch.x64),
+    targets: Platform.LINUX.createTarget(flatpak ? ["dir"] : ["deb", "AppImage"], Arch.x64),
     publish: "never",
     config: {
       appId: "io.github.apollovulpez.aurral-app",
@@ -43,6 +44,7 @@ async function buildLinux() {
       files: ["*.cjs", "*.js", "*.css", "*.html", "assets/**", "LICENSE", "package.json"],
       asar: true,
       afterPack: async ({ appOutDir }) => {
+        if (flatpak) return;
         // Supply the AppImage entry point without adding Chromium launch flags.
         const appRun = path.join(appOutDir, "AppRun");
         await fs.copyFile(path.join(__dirname, "AppRun"), appRun);

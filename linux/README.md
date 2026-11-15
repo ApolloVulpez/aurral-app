@@ -1,12 +1,12 @@
 # Aurral App for Linux
 
-Download the x64 [Debian package](https://github.com/ApolloVulpez/aurral-app/releases/download/linux-v0.1.5/Aurral-App-0.1.5-linux-amd64.deb) or [AppImage](https://github.com/ApolloVulpez/aurral-app/releases/download/linux-v0.1.5/Aurral-App-0.1.5-linux-x86_64.AppImage) from the [Linux release](https://github.com/ApolloVulpez/aurral-app/releases/tag/linux-v0.1.5).
+Download the x64 [Debian package](https://github.com/ApolloVulpez/aurral-app/releases/download/linux-v0.1.5/Aurral-App-0.1.5-linux-amd64.deb), [AppImage](https://github.com/ApolloVulpez/aurral-app/releases/download/linux-v0.1.5/Aurral-App-0.1.5-linux-x86_64.AppImage), or [Flatpak bundle](https://github.com/ApolloVulpez/aurral-app/releases/download/linux-v0.1.5/Aurral-App-0.1.5-linux-x86_64.flatpak) from the [Linux release](https://github.com/ApolloVulpez/aurral-app/releases/tag/linux-v0.1.5).
 
 | Distribution | Package |
 | --- | --- |
 | Ubuntu, Debian, Linux Mint | `.deb` |
-| Fedora | `.AppImage` |
-| SteamOS, Bazzite | `.AppImage`, initially opened in Desktop Mode |
+| Fedora | `.flatpak` or `.AppImage` |
+| SteamOS, Bazzite | `.flatpak` or `.AppImage`, initially opened in Desktop Mode |
 
 Use a current, supported release of your distribution.
 
@@ -33,6 +33,16 @@ The AppImage uses a runtime that avoids a dependency on FUSE 2. On Ubuntu and Mi
 
 On Bazzite, Gear Lever can add an AppImage to the application menu. On SteamOS, start in Desktop Mode. You can add the AppImage to Steam as a non-Steam application if you want to launch it from Gaming Mode.
 
+## Install the Flatpak bundle
+
+With Flatpak installed, open the `.flatpak` file in your software center or install it from the download folder.
+
+```sh
+flatpak install --user ./Aurral-App-0.1.5-linux-x86_64.flatpak
+```
+
+The first install may download the Freedesktop runtime from Flathub. Open **Aurral App** from your application menu. The Flatpak keeps its own server settings and sign-in. To update a bundle installation, install the newer `.flatpak` file.
+
 ## Connect and use Aurral
 
 Enter your Aurral server URL, then sign in. Aurral App remembers the URL and session.
@@ -54,3 +64,12 @@ npm run build
 ```
 
 The build creates both packages in `dist/linux`.
+
+To build the Flatpak, install Flatpak and add Flathub as a remote. On x86-64 Linux, run these commands from the `linux` directory after `npm ci`.
+
+```sh
+flatpak install --user flathub org.freedesktop.Platform//25.08 org.freedesktop.Sdk//25.08 org.electronjs.Electron2.BaseApp//25.08
+npm run build:flatpak
+```
+
+The bundle is written to `dist/linux`.
