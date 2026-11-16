@@ -1,7 +1,7 @@
 const { app, BrowserWindow, dialog, ipcMain, Menu, session, shell, Tray, WebContentsView } = require("electron");
 const fs = require("node:fs");
 const path = require("node:path");
-const { checkForUpdate, installUpdate } = require("./updates.cjs");
+const { checkForUpdate, installUpdate, openFlatpakUpdate } = require("./updates.cjs");
 const { DiscordPresence } = require("./discord-presence.cjs");
 const { DiscordArtwork } = require("./discord-artwork.cjs");
 
@@ -16,6 +16,8 @@ const navigationHeight = 36;
 const connectTimeoutMs = 15_000;
 const isLinux = process.platform === "linux";
 const isFlatpak = isLinux && Boolean(process.env.FLATPAK_ID);
+const updateChannel = isFlatpak ? require("./package.json").updateChannel : undefined;
+const playerTitle = updateChannel === "flatpak-testing" ? `Aurral App Testing ${app.getVersion()}` : "Aurral App";
 const windowIcon = isLinux ? path.join(__dirname, "assets", "icon.png") : undefined;
 const launcherPlaybackActions = new Set(["previoustrack", "toggle", "nexttrack"]);
 const playbackArgument = "--aurral-playback=";
@@ -177,8 +179,7 @@ function sendUpdateStatus(contents = player?.webContents) {
   contents.send("aurral:update-state", {
     busy: Boolean(updateStatus),
     available: Boolean(availableUpdate),
-    label: isFlatpak ? "About Flatpak updates" :
-      updateStatus || (availableUpdate ? `Update to Aurral App ${availableUpdate.version}` : "Check for app updates"),
+    label: updateStatus || (availableUpdate ? `Update to Aurral App ${availableUpdate.version}` : "Check for app updates"),
   });
 }
 
@@ -213,36 +214,43 @@ function restartAfterUpdate(executable, appImage) {
 
 async function checkForAppUpdate(install) {
   if (updateStatus || quitting) return;
-  if (isFlatpak) {
-    if (install) await showUpdateMessage("Aurral App updates through Flatpak.",
-      "Install a newer Aurral App .flatpak bundle or update through your software center if you installed from a Flatpak repository.");
-    return;
-  }
   if (!app.isPackaged) {
     if (install) await showUpdateMessage("App updates are available in packaged builds.");
     return;
   }
 
-  const appImage = currentAppImage();
+  const appImage = isFlatpak ? undefined : currentAppImage();
   const platform = process.platform;
   updateStatus = "Checking for app updates…";
   sendUpdateStatus();
   try {
-    availableUpdate = await checkForUpdate({ version: app.getVersion(), platform, arch: process.arch, appImage });
+    availableUpdate = await checkForUpdate({ version: app.getVersion(), platform, arch: process.arch, appImage, flatpak: isFlatpak, updateChannel });
     if (!install || quitting) return;
     if (!availableUpdate) {
       await showUpdateMessage("Aurral App is up to date.");
       return;
     }
 
-    updateStatus = `Installing Aurral App ${availableUpdate.version}…`;
+    updateStatus = `${isFlatpak ? "Downloading" : "Installing"} Aurral App ${availableUpdate.version}…`;
     sendUpdateStatus();
+    // The Flatpak's app cache is also accessible to the host software installer.
+    const tempDirectory = isFlatpak
+      ? path.join(process.env.XDG_CACHE_HOME || app.getPath("userData"), "aurral-app-updates")
+      : app.getPath("temp");
     const result = await installUpdate(availableUpdate, {
-      platform, executable: process.execPath, appImage, tempDirectory: app.getPath("temp"),
+      platform, executable: process.execPath, appImage, flatpak: isFlatpak, tempDirectory,
     });
     if (quitting) return;
     if (result.executable) restartAfterUpdate(result.executable, appImage);
     if (result.packageFile) {
+      if (isFlatpak) {
+        if (!await openFlatpakUpdate(result.packageFile)) {
+          shell.showItemInFolder(result.packageFile);
+          await showUpdateMessage(`Aurral App ${availableUpdate.version} downloaded.`,
+            `Open this bundle in your software installer to finish the update.\n\n${result.packageFile}`);
+        }
+        return;
+      }
       if (appImage || await shell.openPath(result.packageFile)) shell.showItemInFolder(result.packageFile);
       await showUpdateMessage(`Aurral App ${availableUpdate.version} downloaded.`, appImage
         ? "Replace your current AppImage with the downloaded file."
@@ -378,6 +386,7 @@ function attachNavigation(window, view) {
   toolbar.on("did-finish-load", () => {
     updateButtons();
     sendUpdateStatus(toolbar);
+    if (updateChannel === "flatpak-testing") toolbar.send("aurral:title", playerTitle);
   });
   page.on("did-navigate", updateButtons);
   page.on("did-navigate-in-page", (_event, _url, isMainFrame) => {
@@ -453,7 +462,7 @@ async function openServer(server) {
   let window;
   try {
     window = new BrowserWindow({
-      title: "Aurral App",
+      title: playerTitle,
       width: 1200,
       height: 800,
       minWidth: 520,
@@ -644,7 +653,7 @@ if (!app.requestSingleInstanceLock({ playbackAction: launcherPlaybackAction }) |
     applyDiscordSettings();
     void checkForAppUpdate(false);
     tray = new Tray(path.join(__dirname, "assets", isLinux ? "icon.png" : "TrayTemplate.png"));
-    tray.setToolTip("Aurral App");
+    tray.setToolTip(playerTitle);
     if (!isLinux) {
       tray.on("click", showTrayMenu);
       tray.on("right-click", showTrayMenu);

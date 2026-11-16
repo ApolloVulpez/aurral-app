@@ -29,6 +29,7 @@ window.addEventListener("DOMContentLoaded", () => {
   settings.addEventListener("click", toggleSettings);
   ipcRenderer.on("aurral:settings-shortcut", toggleSettings);
   ipcRenderer.on("aurral:settings-visibility", (_event, open) => settings.setAttribute("aria-expanded", String(open)));
+  ipcRenderer.on("aurral:title", (_event, title) => { document.querySelector(".title").textContent = title; });
   ipcRenderer.on("aurral:history-state", (_event, state) => {
     back.disabled = !state.back;
     forward.disabled = !state.forward;

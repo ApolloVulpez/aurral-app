@@ -41,7 +41,11 @@ With Flatpak installed, open the `.flatpak` file in your software center or inst
 flatpak install --user ./Aurral-App-0.1.7-linux-x86_64.flatpak
 ```
 
-The first install may download the Freedesktop runtime from Flathub. Open **Aurral App** from your application menu. The Flatpak keeps its own server settings and sign-in. To update a bundle installation, install the newer `.flatpak` file.
+The first install may download the Freedesktop runtime from Flathub. Open **Aurral App** from your application menu. The Flatpak keeps its own server settings and sign-in. When the title-bar update icon lights up, click it to download the newer bundle and open it in your software installer.
+
+### SteamOS testing builds
+
+The [`codex/flatpak-testing` branch](https://github.com/ApolloVulpez/aurral-app/tree/codex/flatpak-testing) publishes `flatpak-testing-vX.Y.Z` prereleases. Install the `-testing.flatpak` bundle in Desktop Mode to run **Aurral App Testing** alongside the stable app with its own server settings and sign-in. The title bar shows the installed test version. Its update button checks those prereleases and downloads the matching testing bundle.
 
 ## Connect and use Aurral
 
@@ -75,3 +79,5 @@ npm run build:flatpak
 ```
 
 The bundle is written to `dist/linux`.
+
+To build **Aurral App Testing** on the testing branch, run `npm run build:flatpak -- --testing`. Attach the `-testing.flatpak` bundle to a GitHub prerelease tagged `flatpak-testing-vX.Y.Z` at the branch commit, using the version in `linux/package.json`.

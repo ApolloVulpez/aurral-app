@@ -21,34 +21,37 @@ function compareVersions(left, right) {
   return 0;
 }
 
-function packageNames(version, platform, arch, appImage) {
+function packageNames(version, platform, arch, appImage, flatpak, flatpakTesting) {
   const name = `Aurral-App-${version}`;
   if (platform === "darwin") {
     const macArch = { arm64: "arm64", x64: "x64" }[arch];
     return macArch ? [`${name}-macOS-universal.dmg`, `${name}-macOS-${macArch}.dmg`] : [];
   }
   if (platform === "linux" && arch === "x64") {
+    if (flatpak) return [`${name}-linux-x86_64${flatpakTesting ? "-testing" : ""}.flatpak`];
     return appImage ? [`${name}-linux-x86_64.AppImage`, `${name}-linux-x64.AppImage`]
       : [`${name}-linux-amd64.deb`, `${name}-linux-x64.deb`];
   }
   return [];
 }
 
-async function checkForUpdate({ version: current, platform, arch, appImage }) {
+async function checkForUpdate({ version: current, platform, arch, appImage, flatpak, updateChannel }) {
   const response = await fetch(releaseApi, {
     headers: { Accept: "application/vnd.github+json", "User-Agent": `Aurral-App/${current}` },
     signal: AbortSignal.timeout(15_000),
   });
   if (!response.ok) throw new Error(`GitHub returned HTTP ${response.status}.`);
   const releases = await response.json();
-  const tagPrefix = platform === "darwin" ? "macos-" : "linux-";
+  const flatpakTesting = flatpak && platform === "linux" && updateChannel === "flatpak-testing";
+  const tagPrefix = flatpakTesting ? "flatpak-testing-" : platform === "darwin" ? "macos-" : "linux-";
   let newest;
   for (const release of releases) {
+    if (release.draft || (flatpakTesting ? !release.prerelease || !release.tag_name.startsWith(tagPrefix) : release.prerelease)) continue;
     const tag = release.tag_name.startsWith(tagPrefix) ? release.tag_name.slice(tagPrefix.length) : release.tag_name;
     const version = /^v((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))$/.exec(tag)?.[1];
-    if (!version || release.draft || release.prerelease || compareVersions(version, newest?.version ?? current) <= 0) continue;
+    if (!version || compareVersions(version, newest?.version ?? current) <= 0) continue;
 
-    for (const name of packageNames(version, platform, arch, appImage)) {
+    for (const name of packageNames(version, platform, arch, appImage, flatpak, flatpakTesting)) {
       const url = `https://github.com/${repository}/releases/download/${release.tag_name}/${name}`;
       const asset = release.assets.find(item => item.name === name && item.browser_download_url === url &&
         item.state === "uploaded" && Number.isSafeInteger(item.size) && item.size > 0);
@@ -154,13 +157,28 @@ async function installDeb(packageFile) {
   }
 }
 
-async function installUpdate(update, { platform, executable, appImage, tempDirectory }) {
+async function openFlatpakUpdate(packageFile) {
+  try {
+    // Flatpak's xdg-open sends the file to the desktop portal.
+    await run("/usr/bin/xdg-open", [packageFile], { timeout: 30_000 });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function installUpdate(update, { platform, executable, appImage, flatpak, tempDirectory }) {
+  if (flatpak) await fs.mkdir(tempDirectory, { recursive: true, mode: 0o700 });
   const directory = await fs.mkdtemp(path.join(tempDirectory, "aurral-update-"));
   const packageFile = path.join(directory, update.name);
   let keepDownload = false;
   try {
     await downloadUpdate(update, packageFile);
-    if (appImage) {
+    if (flatpak) {
+      const bundle = path.join(tempDirectory, update.name);
+      await fs.rename(packageFile, bundle);
+      return { packageFile: bundle };
+    } else if (appImage) {
       try {
         await replaceAppImage(packageFile, appImage);
         return { executable: appImage };
@@ -190,4 +208,4 @@ async function installUpdate(update, { platform, executable, appImage, tempDirec
   }
 }
 
-module.exports = { checkForUpdate, installUpdate };
+module.exports = { checkForUpdate, installUpdate, openFlatpakUpdate };

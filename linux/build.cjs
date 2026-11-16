@@ -4,6 +4,9 @@ const path = require("node:path");
 
 async function buildLinux() {
   const flatpak = process.argv.includes("--flatpak");
+  const flatpakVariant = flatpak ? require("./flatpak/variants.cjs")[process.argv.includes("--testing") ? "testing" : "stable"] : null;
+  const appId = flatpakVariant?.id ?? "io.github.apollovulpez.aurral-app";
+  const productName = flatpakVariant?.name ?? "Aurral App";
   const root = path.resolve(__dirname, "..");
   const shared = path.join(root, "macos");
   const staging = path.join(root, "obj", flatpak ? "flatpak-source" : "linux-source");
@@ -25,8 +28,9 @@ async function buildLinux() {
   await fs.copyFile(path.join(root, "LICENSE"), path.join(staging, "LICENSE"));
   await fs.writeFile(path.join(staging, "package.json"), JSON.stringify({
     name: "aurral-app",
-    productName: "Aurral App",
-    desktopName: "io.github.apollovulpez.aurral-app.desktop",
+    productName,
+    desktopName: `${appId}.desktop`,
+    updateChannel: flatpakVariant?.updateChannel,
     version,
     dependencies,
     main: "main.cjs",
@@ -40,8 +44,8 @@ async function buildLinux() {
     targets: Platform.LINUX.createTarget(flatpak ? ["dir"] : ["deb", "AppImage"], Arch.x64),
     publish: "never",
     config: {
-      appId: "io.github.apollovulpez.aurral-app",
-      productName: "Aurral App",
+      appId,
+      productName,
       electronVersion,
       directories: { app: staging, output, buildResources: path.join(shared, "assets") },
       files: ["*.cjs", "*.js", "*.css", "*.html", "assets/**", "LICENSE", "package.json"],
