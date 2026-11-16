@@ -45,7 +45,7 @@ The first install may download the Freedesktop runtime from Flathub. Open **Aurr
 
 ### SteamOS testing builds
 
-The [`codex/flatpak-testing` branch](https://github.com/ApolloVulpez/aurral-app/tree/codex/flatpak-testing) publishes `flatpak-testing-vX.Y.Z` prereleases. Install the `-testing.flatpak` bundle in Desktop Mode to run **Aurral App Testing** alongside the stable app with its own server settings and sign-in. The title bar shows the installed test version. Its update button checks those prereleases and downloads the matching testing bundle.
+The [`codex/flatpak-testing` branch](https://github.com/ApolloVulpez/aurral-app/tree/codex/flatpak-testing) publishes `flatpak-testing-vX.Y.Z` prereleases. Install the signed `-testing.flatpak` bundle in Desktop Mode to run **Aurral App Testing** alongside the stable app with its own server settings and sign-in. The bundle configures a dedicated signed Flatpak repository. The title-bar update button checks the test releases and asks Flatpak to install updates from that repository. Quit and reopen the test app after installation to use the version shown in the title bar.
 
 ## Connect and use Aurral
 
@@ -80,4 +80,4 @@ npm run build:flatpak
 
 The bundle is written to `dist/linux`.
 
-To build **Aurral App Testing** on the testing branch, run `npm run build:flatpak -- --testing`. Attach the `-testing.flatpak` bundle to a GitHub prerelease tagged `flatpak-testing-vX.Y.Z` at the branch commit, using the version in `linux/package.json`.
+To build **Aurral App Testing**, set `AURRAL_TEST_REPO` to the working directory of the testing repository, and set `AURRAL_TEST_GPG_HOME` and `AURRAL_TEST_GPG_KEY` to the directory and fingerprint for its signing key. Run `npm run build:flatpak -- --testing`. Publish the signed repository to `codex/flatpak-testing-feed`, then attach the `-testing.flatpak` bundle to a GitHub prerelease tagged `flatpak-testing-vX.Y.Z` at the source commit. Use the version in `linux/package.json`.

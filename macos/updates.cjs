@@ -167,6 +167,37 @@ async function openFlatpakUpdate(packageFile) {
   }
 }
 
+async function installFlatpakRepositoryUpdate(onProgress) {
+  const { sessionBus } = require("@jellybrick/dbus-next");
+  const name = "org.freedesktop.portal.Flatpak";
+  const bus = sessionBus();
+  const completion = Promise.withResolvers();
+  const timeout = setTimeout(() => completion.reject(new Error("Flatpak did not finish the update.")), 15 * 60_000);
+  bus.on("error", completion.reject);
+
+  async function requestUpdate() {
+    const portal = (await bus.getProxyObject(name, "/org/freedesktop/portal/Flatpak")).getInterface(name);
+    const handle = await portal.CreateUpdateMonitor({});
+    const monitor = (await bus.getProxyObject(name, handle)).getInterface(`${name}.UpdateMonitor`);
+    monitor.on("Progress", info => {
+      const status = info.status?.value;
+      if (status === 2) completion.resolve(true);
+      if (status === 1) completion.resolve(false);
+      if (status === 3) completion.reject(new Error(info.error_message?.value || "Flatpak could not install the update."));
+      if (status === 0 && Number.isInteger(info.progress?.value)) onProgress(info.progress.value);
+    });
+    await monitor.Update("", {});
+    return completion.promise;
+  }
+
+  try {
+    return await Promise.race([requestUpdate(), completion.promise]);
+  } finally {
+    clearTimeout(timeout);
+    bus.disconnect();
+  }
+}
+
 async function isVerifiedBundle(packageFile, update) {
   if (!/^sha256:[a-f\d]{64}$/i.test(update.digest)) return false;
   try {
@@ -224,4 +255,4 @@ async function installUpdate(update, { platform, executable, appImage, flatpak, 
   }
 }
 
-module.exports = { checkForUpdate, installUpdate, openFlatpakUpdate };
+module.exports = { checkForUpdate, installUpdate, installFlatpakRepositoryUpdate, openFlatpakUpdate };

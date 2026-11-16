@@ -1,7 +1,7 @@
 const { app, BrowserWindow, dialog, ipcMain, Menu, session, shell, Tray, WebContentsView } = require("electron");
 const fs = require("node:fs");
 const path = require("node:path");
-const { checkForUpdate, installUpdate, openFlatpakUpdate } = require("./updates.cjs");
+const { checkForUpdate, installUpdate, installFlatpakRepositoryUpdate, openFlatpakUpdate } = require("./updates.cjs");
 const { DiscordPresence } = require("./discord-presence.cjs");
 const { DiscordArtwork } = require("./discord-artwork.cjs");
 
@@ -228,6 +228,21 @@ async function checkForAppUpdate(install) {
     if (!install || quitting) return;
     if (!availableUpdate) {
       await showUpdateMessage("Aurral App is up to date.");
+      return;
+    }
+
+    if (updateChannel === "flatpak-testing") {
+      updateStatus = `Installing Aurral App ${availableUpdate.version}…`;
+      sendUpdateStatus();
+      const installed = await installFlatpakRepositoryUpdate(progress => {
+        updateStatus = `Installing Aurral App ${availableUpdate.version}… ${progress}%`;
+        sendUpdateStatus();
+      });
+      if (quitting) return;
+      if (!installed) throw new Error("The testing repository has no update ready for this installation.");
+
+      availableUpdate = null;
+      await showUpdateMessage("Aurral App Testing update installed.", "Quit and reopen Aurral App Testing to use the new version.");
       return;
     }
 

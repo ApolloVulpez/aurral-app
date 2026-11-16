@@ -19,6 +19,20 @@ version="$(node -p 'require("./package.json").version')"
 output="../dist/linux/Aurral-App-${version}-linux-x86_64${suffix}.flatpak"
 work="$(mktemp -d)"
 trap 'rm -rf -- "$work"' EXIT
+repo="$work/repo"
+export_options=()
+bundle_options=()
+if [[ "$variant" == testing ]]; then
+  : "${AURRAL_TEST_REPO:?Set the working directory for the signed Flatpak testing repository}"
+  : "${AURRAL_TEST_GPG_HOME:?Set the directory containing the Flatpak testing signing key}"
+  : "${AURRAL_TEST_GPG_KEY:?Set the Flatpak testing signing key fingerprint}"
+  repo="$AURRAL_TEST_REPO"
+  gpg --batch --homedir "$AURRAL_TEST_GPG_HOME" --export "$AURRAL_TEST_GPG_KEY" > "$work/testing.gpg"
+  test -s "$work/testing.gpg"
+  export_options+=(--gpg-sign="$AURRAL_TEST_GPG_KEY" --gpg-homedir="$AURRAL_TEST_GPG_HOME")
+  bundle_options+=(--repo-url=https://raw.githubusercontent.com/ApolloVulpez/aurral-app/refs/heads/codex/flatpak-testing-feed
+    --gpg-keys="$work/testing.gpg")
+fi
 
 node build.cjs --flatpak "$@"
 flatpak build-init --arch=x86_64 --base=org.electronjs.Electron2.BaseApp \
@@ -49,9 +63,9 @@ flatpak build-finish --command=aurral-app \
   --own-name="org.mpris.MediaPlayer2.$app_id" \
   --talk-name=com.canonical.Unity --filesystem=xdg-run/app/com.discordapp.Discord:ro \
   "${discord_sockets[@]}" "$work/build"
-flatpak build-export --arch=x86_64 "$work/repo" "$work/build" "$branch"
+flatpak build-export --arch=x86_64 "${export_options[@]}" "$repo" "$work/build" "$branch"
 mkdir -p "$(dirname "$output")"
 flatpak build-bundle --arch=x86_64 --runtime-repo=https://dl.flathub.org/repo/flathub.flatpakrepo \
-  "$work/repo" "$work/aurral.flatpak" "$app_id" "$branch"
+  "${bundle_options[@]}" "$repo" "$work/aurral.flatpak" "$app_id" "$branch"
 mv -- "$work/aurral.flatpak" "$output"
 echo "Created $output"
