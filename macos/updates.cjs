@@ -1,6 +1,6 @@
 const { execFile } = require("node:child_process");
 const { createHash } = require("node:crypto");
-const { createWriteStream, renameSync } = require("node:fs");
+const { createReadStream, createWriteStream, renameSync } = require("node:fs");
 const fs = require("node:fs/promises");
 const path = require("node:path");
 const { Readable } = require("node:stream");
@@ -167,15 +167,31 @@ async function openFlatpakUpdate(packageFile) {
   }
 }
 
+async function isVerifiedBundle(packageFile, update) {
+  if (!/^sha256:[a-f\d]{64}$/i.test(update.digest)) return false;
+  try {
+    const file = await fs.lstat(packageFile);
+    if (!file.isFile() || file.size !== update.size) return false;
+    const hash = createHash("sha256");
+    for await (const chunk of createReadStream(packageFile)) hash.update(chunk);
+    return hash.digest("hex") === update.digest.slice(7).toLowerCase();
+  } catch {
+    return false;
+  }
+}
+
 async function installUpdate(update, { platform, executable, appImage, flatpak, tempDirectory }) {
-  if (flatpak) await fs.mkdir(tempDirectory, { recursive: true, mode: 0o700 });
+  const bundle = flatpak ? path.join(tempDirectory, update.name) : null;
+  if (bundle) {
+    await fs.mkdir(tempDirectory, { recursive: true, mode: 0o700 });
+    if (await isVerifiedBundle(bundle, update)) return { packageFile: bundle };
+  }
   const directory = await fs.mkdtemp(path.join(tempDirectory, "aurral-update-"));
   const packageFile = path.join(directory, update.name);
   let keepDownload = false;
   try {
     await downloadUpdate(update, packageFile);
-    if (flatpak) {
-      const bundle = path.join(tempDirectory, update.name);
+    if (bundle) {
       await fs.rename(packageFile, bundle);
       return { packageFile: bundle };
     } else if (appImage) {
