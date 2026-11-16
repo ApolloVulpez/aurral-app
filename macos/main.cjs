@@ -1,7 +1,7 @@
 const { app, BrowserWindow, dialog, ipcMain, Menu, session, shell, Tray, WebContentsView } = require("electron");
 const fs = require("node:fs");
 const path = require("node:path");
-const { checkForUpdate, installUpdate } = require("./updates.cjs");
+const { checkForUpdate, installUpdate, installFlatpakRepositoryUpdate } = require("./updates.cjs");
 const { DiscordPresence } = require("./discord-presence.cjs");
 const { DiscordArtwork } = require("./discord-artwork.cjs");
 
@@ -177,8 +177,7 @@ function sendUpdateStatus(contents = player?.webContents) {
   contents.send("aurral:update-state", {
     busy: Boolean(updateStatus),
     available: Boolean(availableUpdate),
-    label: isFlatpak ? "About Flatpak updates" :
-      updateStatus || (availableUpdate ? `Update to Aurral App ${availableUpdate.version}` : "Check for app updates"),
+    label: updateStatus || (availableUpdate ? `Update to Aurral App ${availableUpdate.version}` : "Check for app updates"),
   });
 }
 
@@ -213,22 +212,17 @@ function restartAfterUpdate(executable, appImage) {
 
 async function checkForAppUpdate(install) {
   if (updateStatus || quitting) return;
-  if (isFlatpak) {
-    if (install) await showUpdateMessage("Aurral App updates through Flatpak.",
-      "Install a newer Aurral App .flatpak bundle or update through your software center if you installed from a Flatpak repository.");
-    return;
-  }
   if (!app.isPackaged) {
     if (install) await showUpdateMessage("App updates are available in packaged builds.");
     return;
   }
 
-  const appImage = currentAppImage();
+  const appImage = isFlatpak ? undefined : currentAppImage();
   const platform = process.platform;
   updateStatus = "Checking for app updates…";
   sendUpdateStatus();
   try {
-    availableUpdate = await checkForUpdate({ version: app.getVersion(), platform, arch: process.arch, appImage });
+    availableUpdate = await checkForUpdate({ version: app.getVersion(), platform, arch: process.arch, appImage, flatpak: isFlatpak });
     if (!install || quitting) return;
     if (!availableUpdate) {
       await showUpdateMessage("Aurral App is up to date.");
@@ -237,6 +231,19 @@ async function checkForAppUpdate(install) {
 
     updateStatus = `Installing Aurral App ${availableUpdate.version}…`;
     sendUpdateStatus();
+    if (isFlatpak) {
+      const installed = await installFlatpakRepositoryUpdate(progress => {
+        updateStatus = `Installing Aurral App ${availableUpdate.version}… ${progress}%`;
+        sendUpdateStatus();
+      });
+      if (quitting) return;
+      if (!installed) throw new Error("Flatpak has no update ready for this installation.");
+
+      availableUpdate = null;
+      await showUpdateMessage("Aurral App update installed.", "Quit and reopen Aurral App to use the new version.");
+      return;
+    }
+
     const result = await installUpdate(availableUpdate, {
       platform, executable: process.execPath, appImage, tempDirectory: app.getPath("temp"),
     });

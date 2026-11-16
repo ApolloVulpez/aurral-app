@@ -8,7 +8,7 @@
 <p align="center">
   <a href="https://github.com/ApolloVulpez/aurral-app/releases/tag/windows-v0.1.5"><img src="https://img.shields.io/badge/Windows-v0.1.5-84cc16" alt="Windows release" /></a>
   <a href="https://github.com/ApolloVulpez/aurral-app/releases/tag/macos-v0.1.5"><img src="https://img.shields.io/badge/macOS-v0.1.5-84cc16" alt="macOS release" /></a>
-  <a href="https://github.com/ApolloVulpez/aurral-app/releases/tag/linux-v0.1.7"><img src="https://img.shields.io/badge/Linux-v0.1.7-84cc16" alt="Linux release" /></a>
+  <a href="https://github.com/ApolloVulpez/aurral-app/releases/tag/linux-v0.1.8"><img src="https://img.shields.io/badge/Linux-v0.1.8-84cc16" alt="Linux release" /></a>
 </p>
 
 <p align="center">A Windows, macOS, and Linux desktop front end for your Aurral server.</p>
@@ -37,9 +37,9 @@ Download the DMG for [Apple Silicon](https://github.com/ApolloVulpez/aurral-app/
 
 ### Linux
 
-Download the x64 [Debian package](https://github.com/ApolloVulpez/aurral-app/releases/download/linux-v0.1.7/Aurral-App-0.1.7-linux-amd64.deb), [AppImage](https://github.com/ApolloVulpez/aurral-app/releases/download/linux-v0.1.7/Aurral-App-0.1.7-linux-x86_64.AppImage), or [Flatpak bundle](https://github.com/ApolloVulpez/aurral-app/releases/download/linux-v0.1.7/Aurral-App-0.1.7-linux-x86_64.flatpak).
+Download the x64 [Debian package](https://github.com/ApolloVulpez/aurral-app/releases/download/linux-v0.1.8/Aurral-App-0.1.8-linux-amd64.deb), [AppImage](https://github.com/ApolloVulpez/aurral-app/releases/download/linux-v0.1.8/Aurral-App-0.1.8-linux-x86_64.AppImage), or [Flatpak bundle](https://github.com/ApolloVulpez/aurral-app/releases/download/linux-v0.1.8/Aurral-App-0.1.8-linux-x86_64.flatpak).
 
-Install the `.deb` through your software installer. For the AppImage, allow the file to run as a program in its properties, then open it. For the Flatpak, open the downloaded bundle in your software center or install it from the terminal. Start in Desktop Mode on SteamOS and Bazzite. See the [Linux guide](linux/README.md) for the commands.
+Install the `.deb` through your software installer. For the AppImage, allow the file to run as a program in its properties, then open it. For the Flatpak, install the downloaded bundle from the terminal to set up in-app updates. See the [Linux guide](linux/README.md) for the commands.
 
 ## Connect and use Aurral
 
@@ -65,7 +65,7 @@ Turn either option off in the **Settings** menu beside the title-bar update butt
 
 ## App updates
 
-Aurral App checks GitHub on startup. The download icon beside Back and Forward turns white when a newer compatible release is available and stays grey otherwise. Click it to check, download, and install the update. Windows and `.deb` installations can prompt for administrator approval. Aurral App reopens after an in-place update and keeps your server settings and sign-in. If the installation needs to be finished manually, the app opens the downloaded package or shows its location.
+Aurral App checks GitHub on startup. The download icon beside Back and Forward turns white when a newer compatible release is available and stays grey otherwise. Click it to check for and install the update. Windows and `.deb` installations can prompt for administrator approval. Flatpak installations use the signed update repository and prompt you to reopen Aurral after installation. Updates keep your server settings and sign-in. If the installation needs to be finished manually, the app opens the downloaded package or shows its location.
 
 Windows, macOS, and Linux use independent version numbers. Publish stable releases with the matching `windows-vMAJOR.MINOR.PATCH`, `macos-vMAJOR.MINOR.PATCH`, or `linux-vMAJOR.MINOR.PATCH` tag and keep the filenames produced by the build scripts.
 

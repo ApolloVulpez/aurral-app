@@ -8,6 +8,11 @@ version="$(node -p 'require("./package.json").version')"
 output="../dist/linux/Aurral-App-${version}-linux-x86_64.flatpak"
 work="$(mktemp -d)"
 trap 'rm -rf -- "$work"' EXIT
+: "${AURRAL_FLATPAK_REPO:?Set the working directory for the signed Flatpak repository}"
+: "${AURRAL_FLATPAK_GPG_HOME:?Set the directory containing the Flatpak signing key}"
+: "${AURRAL_FLATPAK_GPG_KEY:?Set the Flatpak signing key fingerprint}"
+gpg --batch --homedir "$AURRAL_FLATPAK_GPG_HOME" --export "$AURRAL_FLATPAK_GPG_KEY" > "$work/release.gpg"
+test -s "$work/release.gpg"
 
 node build.cjs --flatpak
 flatpak build-init --arch=x86_64 --base=org.electronjs.Electron2.BaseApp \
@@ -35,9 +40,11 @@ flatpak build-finish --command=aurral-app \
   --own-name="org.mpris.MediaPlayer2.$app_id" \
   --talk-name=com.canonical.Unity --filesystem=xdg-run/app/com.discordapp.Discord:ro \
   "${discord_sockets[@]}" "$work/build"
-flatpak build-export --arch=x86_64 "$work/repo" "$work/build" stable
+flatpak build-export --arch=x86_64 --gpg-sign="$AURRAL_FLATPAK_GPG_KEY" --gpg-homedir="$AURRAL_FLATPAK_GPG_HOME" \
+  "$AURRAL_FLATPAK_REPO" "$work/build" stable
 mkdir -p "$(dirname "$output")"
 flatpak build-bundle --arch=x86_64 --runtime-repo=https://dl.flathub.org/repo/flathub.flatpakrepo \
-  "$work/repo" "$work/aurral.flatpak" "$app_id" stable
+  --repo-url=https://raw.githubusercontent.com/ApolloVulpez/aurral-app/refs/heads/codex/flatpak-stable-feed \
+  --gpg-keys="$work/release.gpg" "$AURRAL_FLATPAK_REPO" "$work/aurral.flatpak" "$app_id" stable
 mv -- "$work/aurral.flatpak" "$output"
 echo "Created $output"

@@ -21,20 +21,21 @@ function compareVersions(left, right) {
   return 0;
 }
 
-function packageNames(version, platform, arch, appImage) {
+function packageNames(version, platform, arch, appImage, flatpak) {
   const name = `Aurral-App-${version}`;
   if (platform === "darwin") {
     const macArch = { arm64: "arm64", x64: "x64" }[arch];
     return macArch ? [`${name}-macOS-universal.dmg`, `${name}-macOS-${macArch}.dmg`] : [];
   }
   if (platform === "linux" && arch === "x64") {
+    if (flatpak) return [`${name}-linux-x86_64.flatpak`];
     return appImage ? [`${name}-linux-x86_64.AppImage`, `${name}-linux-x64.AppImage`]
       : [`${name}-linux-amd64.deb`, `${name}-linux-x64.deb`];
   }
   return [];
 }
 
-async function checkForUpdate({ version: current, platform, arch, appImage }) {
+async function checkForUpdate({ version: current, platform, arch, appImage, flatpak }) {
   const response = await fetch(releaseApi, {
     headers: { Accept: "application/vnd.github+json", "User-Agent": `Aurral-App/${current}` },
     signal: AbortSignal.timeout(15_000),
@@ -48,7 +49,7 @@ async function checkForUpdate({ version: current, platform, arch, appImage }) {
     const version = /^v((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))$/.exec(tag)?.[1];
     if (!version || release.draft || release.prerelease || compareVersions(version, newest?.version ?? current) <= 0) continue;
 
-    for (const name of packageNames(version, platform, arch, appImage)) {
+    for (const name of packageNames(version, platform, arch, appImage, flatpak)) {
       const url = `https://github.com/${repository}/releases/download/${release.tag_name}/${name}`;
       const asset = release.assets.find(item => item.name === name && item.browser_download_url === url &&
         item.state === "uploaded" && Number.isSafeInteger(item.size) && item.size > 0);
@@ -190,4 +191,35 @@ async function installUpdate(update, { platform, executable, appImage, tempDirec
   }
 }
 
-module.exports = { checkForUpdate, installUpdate };
+async function installFlatpakRepositoryUpdate(onProgress) {
+  const { sessionBus } = require("@jellybrick/dbus-next");
+  const name = "org.freedesktop.portal.Flatpak";
+  const bus = sessionBus();
+  const completion = Promise.withResolvers();
+  const timeout = setTimeout(() => completion.reject(new Error("Flatpak did not finish the update.")), 15 * 60_000);
+  bus.on("error", completion.reject);
+
+  async function requestUpdate() {
+    const portal = (await bus.getProxyObject(name, "/org/freedesktop/portal/Flatpak")).getInterface(name);
+    const handle = await portal.CreateUpdateMonitor({});
+    const monitor = (await bus.getProxyObject(name, handle)).getInterface(`${name}.UpdateMonitor`);
+    monitor.on("Progress", info => {
+      const status = info.status?.value;
+      if (status === 2) completion.resolve(true);
+      if (status === 1) completion.resolve(false);
+      if (status === 3) completion.reject(new Error(info.error_message?.value || "Flatpak could not install the update."));
+      if (status === 0 && Number.isInteger(info.progress?.value)) onProgress(info.progress.value);
+    });
+    await monitor.Update("", {});
+    return completion.promise;
+  }
+
+  try {
+    return await Promise.race([requestUpdate(), completion.promise]);
+  } finally {
+    clearTimeout(timeout);
+    bus.disconnect();
+  }
+}
+
+module.exports = { checkForUpdate, installUpdate, installFlatpakRepositoryUpdate };
