@@ -1,0 +1,26 @@
+name: Label new issues
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  issues: write
+
+jobs:
+  label:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Apply triage and issue type labels
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+        run: |
+          labels="needs-triage"
+          case "$ISSUE_TITLE" in
+            "[Bug]"*) labels="$labels,bug" ;;
+            "[Feature request]"*|"[Feature]"*) labels="$labels,enhancement" ;;
+          esac
+          gh issue edit "$ISSUE_NUMBER" --add-label "$labels"
