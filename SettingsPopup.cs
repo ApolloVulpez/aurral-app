@@ -6,11 +6,12 @@ internal sealed class SettingsPopup : ContextMenuStrip
 {
     private const int MenuWidth = 274;
     private static readonly Color Surface = Color.FromArgb(14, 14, 14);
+    internal static readonly Color TextColor = Color.FromArgb(179, 179, 179);
     private readonly Font? menuFont;
 
-    internal SettingsPopup()
+    internal SettingsPopup(string accessibleName = "Settings")
     {
-        AccessibleName = "Settings";
+        AccessibleName = accessibleName;
         ShowImageMargin = false;
         ShowCheckMargin = true;
         if (SystemInformation.HighContrast) return;
@@ -72,7 +73,6 @@ internal sealed class SettingsPopup : ContextMenuStrip
     private sealed class DarkMenuRenderer : ToolStripRenderer
     {
         private static readonly Color Outline = Color.FromArgb(37, 37, 37);
-        private static readonly Color Muted = Color.FromArgb(179, 179, 179);
         private static readonly Color Disabled = Color.FromArgb(104, 104, 104);
 
         protected override void OnRenderToolStripBackground(ToolStripRenderEventArgs e) => e.Graphics.Clear(Surface);
@@ -126,7 +126,7 @@ internal sealed class SettingsPopup : ContextMenuStrip
                 TextFormatFlags.SingleLine | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix | TextFormatFlags.NoPadding);
         }
 
-        private static Color ItemColor(ToolStripItem item) => !item.Enabled ? Disabled : item.Selected ? Color.White : Muted;
+        private static Color ItemColor(ToolStripItem item) => !item.Enabled ? Disabled : item.Selected ? Color.White : TextColor;
 
         private static void DrawIcon(Graphics graphics, Pen pen, Icon icon)
         {

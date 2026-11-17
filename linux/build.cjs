@@ -14,6 +14,7 @@ async function buildLinux() {
   await fs.mkdir(staging, { recursive: true });
   for (const file of [
     "main.cjs", "media-preload.cjs", "updates.cjs", "discord-presence.cjs", "discord-artwork.cjs", "discord-activity.js",
+    "external-links.js",
     "setup-preload.cjs", "setup.js", "setup.css", "setup.html",
     "navigation-preload.cjs", "navigation.css", "navigation.html",
     "settings-preload.cjs", "settings.html",

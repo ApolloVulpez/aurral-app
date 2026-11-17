@@ -1,11 +1,12 @@
 const { app, BrowserWindow, dialog, ipcMain, Menu, session, shell, Tray, WebContentsView } = require("electron");
 const fs = require("node:fs");
 const path = require("node:path");
-const { checkForUpdate, installUpdate, installFlatpakRepositoryUpdate } = require("./updates.cjs");
+const { checkForUpdate, readChangelog, installUpdate, installFlatpakRepositoryUpdate } = require("./updates.cjs");
 const { DiscordPresence } = require("./discord-presence.cjs");
 const { DiscordArtwork } = require("./discord-artwork.cjs");
 
 const discordActivityScript = fs.readFileSync(path.join(__dirname, "discord-activity.js"), "utf8").trim();
+const externalLinksScript = fs.readFileSync(path.join(__dirname, "external-links.js"), "utf8").trim();
 const discord = new DiscordPresence(fs.readFileSync(path.join(__dirname, "assets", "discord-application-id.txt"), "utf8").trim());
 const discordArtwork = new DiscordArtwork();
 
@@ -18,6 +19,7 @@ const isLinux = process.platform === "linux";
 const isFlatpak = isLinux && Boolean(process.env.FLATPAK_ID);
 const windowIcon = isLinux ? path.join(__dirname, "assets", "icon.png") : undefined;
 const launcherPlaybackActions = new Set(["previoustrack", "toggle", "nexttrack"]);
+const accountPopups = new Set(["spotify-oauth", "aurral-lastfm-link", "plex-sign-in"]);
 const playbackArgument = "--aurral-playback=";
 const launcherPlaybackAction = isLinux
   ? process.argv.find(arg => arg.startsWith(playbackArgument))?.slice(playbackArgument.length)
@@ -60,9 +62,9 @@ function readSettings() {
   try {
     const saved = JSON.parse(fs.readFileSync(settingsFile, "utf8"));
     return { serverUrl: parseServer(saved.serverUrl)?.href ?? "", minimizeToTray: saved.minimizeToTray !== false,
-      discordPresence: saved.discordPresence !== false, discordListenLinks: saved.discordListenLinks !== false };
+      discordPresence: saved.discordPresence === true, discordListenLinks: saved.discordListenLinks === true };
   } catch {
-    return { serverUrl: "", minimizeToTray: true, discordPresence: true, discordListenLinks: true };
+    return { serverUrl: "", minimizeToTray: true, discordPresence: false, discordListenLinks: false };
   }
 }
 
@@ -150,20 +152,40 @@ function openSetup() {
   void window.loadFile(setupFile, { query: { server: settings.serverUrl } });
 }
 
-function allowBrowserNavigation(contents) {
+function allowBrowserNavigation(contents, serverUrl) {
   const isWebPage = url => /^https?:\/\//i.test(url);
   const blockOtherSchemes = event => {
     if (event.isMainFrame && !isWebPage(event.url)) event.preventDefault();
   };
   contents.on("will-frame-navigate", blockOtherSchemes);
   contents.on("will-redirect", blockOtherSchemes);
-  contents.setWindowOpenHandler(({ url }) => ({
-    action: isWebPage(url) || url === "about:blank" ? "allow" : "deny",
-    overrideBrowserWindowOptions: {
-      webPreferences: { nodeIntegration: false, contextIsolation: true, sandbox: true },
-    },
-  }));
-  contents.on("did-create-window", child => allowBrowserNavigation(child.webContents));
+
+  if (serverUrl) {
+    contents.on("dom-ready", () => {
+      void contents.executeJavaScript(`${externalLinksScript}(${JSON.stringify(serverUrl)});`).catch(console.warn);
+    });
+  }
+
+  contents.setWindowOpenHandler(({ url, frameName, postBody }) => {
+    const destination = URL.parse(url);
+    const webPage = destination && isWebPage(destination.href);
+    // Account popups need the embedded session. POSTs also can't be replayed by the default browser.
+    if (serverUrl && webPage && !accountPopups.has(frameName) && !postBody &&
+        destination.origin !== URL.parse(contents.getURL())?.origin) {
+      void shell.openExternal(destination.href).catch(console.warn);
+      return { action: "deny" };
+    }
+
+    return {
+      action: webPage || url === "about:blank" ? "allow" : "deny",
+      overrideBrowserWindowOptions: {
+        webPreferences: { nodeIntegration: false, contextIsolation: true, sandbox: true },
+      },
+    };
+  });
+  contents.on("did-create-window", (child, { frameName }) => {
+    allowBrowserNavigation(child.webContents, accountPopups.has(frameName) ? undefined : serverUrl);
+  });
 }
 
 function navigateHistory(page, direction) {
@@ -283,28 +305,31 @@ function requestSettings() {
   if (!setup && player?.isVisible()) player.webContents.send("aurral:settings-shortcut");
 }
 
-function attachSettingsPopup(window, page) {
+function attachCaptionPopup(window, page) {
   const toolbar = window.webContents;
   let overlay;
   let loaded;
   let anchor;
   let focusBeforePopup;
+  let changelog;
 
   function dismiss(restoreFocus) {
     if (!anchor) return;
     anchor = null;
     if (window.isDestroyed() || toolbar.isDestroyed()) return;
     window.contentView.removeChildView(overlay);
-    toolbar.send("aurral:settings-visibility", false);
+    toolbar.send("aurral:caption-popup-visibility", null);
     if (restoreFocus && focusBeforePopup && !focusBeforePopup.isDestroyed()) focusBeforePopup.focus();
     focusBeforePopup = null;
   }
 
-  toolbar.ipc.on("aurral:toggle-settings", async (event, position) => {
+  toolbar.ipc.on("aurral:toggle-caption-popup", async (event, popup, position) => {
     if (event.senderFrame !== toolbar.mainFrame || window !== player || setup || !Number.isFinite(position?.x)) return;
-    if (anchor) return dismiss(true);
+    if (popup !== "settings" && popup !== "changelog") return;
+    if (anchor?.popup === popup) return dismiss(true);
+    if (anchor) dismiss(false);
 
-    const requested = { x: position.x, alignLeft: position.alignLeft === true, y: navigationHeight + 4 };
+    const requested = { popup, x: position.x, alignLeft: position.alignLeft === true, y: navigationHeight + 4 };
     anchor = requested;
     focusBeforePopup = page.isFocused() ? page : toolbar;
     if (!overlay) {
@@ -319,7 +344,7 @@ function attachSettingsPopup(window, page) {
         if (event.senderFrame === contents.mainFrame) dismiss(true);
       });
       contents.ipc.on("aurral:choose-setting", (event, action) => {
-        if (event.senderFrame !== contents.mainFrame || window !== player || !anchor) return;
+        if (event.senderFrame !== contents.mainFrame || window !== player || anchor?.popup !== "settings") return;
         dismiss(true);
         chooseSetting(action);
       });
@@ -339,13 +364,28 @@ function attachSettingsPopup(window, page) {
     const [width, height] = window.getContentSize();
     overlay.setBounds({ x: 0, y: 0, width, height });
     window.contentView.addChildView(overlay);
-    overlay.webContents.send("aurral:settings-state", {
-      anchor,
-      state: { minimizeToTray: settings.minimizeToTray, discordPresence: settings.discordPresence,
-        discordListenLinks: settings.discordListenLinks },
-    });
-    toolbar.send("aurral:settings-visibility", true);
+    toolbar.send("aurral:caption-popup-visibility", popup);
     overlay.webContents.focus();
+
+    if (popup === "settings") {
+      overlay.webContents.send("aurral:settings-state", {
+        anchor,
+        state: { minimizeToTray: settings.minimizeToTray, discordPresence: settings.discordPresence,
+          discordListenLinks: settings.discordListenLinks },
+      });
+      return;
+    }
+
+    const version = app.getVersion();
+    overlay.webContents.send("aurral:changelog-state", { anchor, version, notes: "Loading release notes…" });
+    changelog ??= readChangelog(version, process.platform).catch(() => {
+      changelog = null;
+      return "Couldn’t load the changelog. Try again when you’re online.";
+    });
+    const notes = await changelog;
+    if (anchor === requested && !window.isDestroyed()) {
+      overlay.webContents.send("aurral:changelog-notes", notes || "Release notes are unavailable for this version.");
+    }
   });
 
   window.on("blur", () => dismiss(false));
@@ -364,7 +404,7 @@ function attachNavigation(window, view) {
   });
 
   window.contentView.addChildView(view);
-  attachSettingsPopup(window, page);
+  attachCaptionPopup(window, page);
   view.setBackgroundColor("#11141b");
   const resize = () => {
     const [width, height] = window.getContentSize();
@@ -491,7 +531,7 @@ async function openServer(server) {
     });
     const page = view.webContents;
     attachNavigation(window, view);
-    allowBrowserNavigation(page);
+    allowBrowserNavigation(page, server.href);
     window.on("page-title-updated", event => event.preventDefault());
     await window.loadFile(navigationFile);
     if (quitting || owner?.isDestroyed()) return "Connection canceled.";

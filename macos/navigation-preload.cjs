@@ -3,13 +3,14 @@ const { ipcRenderer } = require("electron");
 window.addEventListener("DOMContentLoaded", () => {
   const back = document.getElementById("back");
   const forward = document.getElementById("forward");
+  const changelog = document.getElementById("changelog");
   const update = document.getElementById("update");
   const settings = document.getElementById("settings");
 
-  function toggleSettings() {
-    const { left, right } = settings.getBoundingClientRect();
+  function togglePopup(button) {
+    const { left, right } = button.getBoundingClientRect();
     const alignLeft = document.body.classList.contains("controls-left");
-    ipcRenderer.send("aurral:toggle-settings", { x: alignLeft ? left : right, alignLeft });
+    ipcRenderer.send("aurral:toggle-caption-popup", button.id, { x: alignLeft ? left : right, alignLeft });
   }
 
   if (process.platform === "darwin") {
@@ -26,9 +27,12 @@ window.addEventListener("DOMContentLoaded", () => {
   back.addEventListener("click", () => ipcRenderer.send("aurral:navigate-history", "back"));
   forward.addEventListener("click", () => ipcRenderer.send("aurral:navigate-history", "forward"));
   update.addEventListener("click", () => ipcRenderer.send("aurral:check-for-update"));
-  settings.addEventListener("click", toggleSettings);
-  ipcRenderer.on("aurral:settings-shortcut", toggleSettings);
-  ipcRenderer.on("aurral:settings-visibility", (_event, open) => settings.setAttribute("aria-expanded", String(open)));
+  changelog.addEventListener("click", () => togglePopup(changelog));
+  settings.addEventListener("click", () => togglePopup(settings));
+  ipcRenderer.on("aurral:settings-shortcut", () => togglePopup(settings));
+  ipcRenderer.on("aurral:caption-popup-visibility", (_event, popup) => {
+    for (const button of [changelog, settings]) button.setAttribute("aria-expanded", String(button.id === popup));
+  });
   ipcRenderer.on("aurral:history-state", (_event, state) => {
     back.disabled = !state.back;
     forward.disabled = !state.forward;

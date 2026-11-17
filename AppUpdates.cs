@@ -4,18 +4,20 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 using Microsoft.Win32;
 
 namespace Aurral.App;
 
 internal static class AppUpdates
 {
-    private const string ReleaseApi = "https://api.github.com/repos/ApolloVulpez/aurral-app/releases?per_page=100";
+    private const string ReleaseApi = "https://api.github.com/repos/ApolloVulpez/aurral-app/releases";
     private const string ReleaseDownloads = "https://github.com/ApolloVulpez/aurral-app/releases/download/";
     private const string WindowsTagPrefix = "windows-";
     private const string UninstallKey = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{96AB4288-F7A0-4C16-B0D8-DFFAC7CD6659}_is1";
     private static readonly HttpClient Client = new() { Timeout = Timeout.InfiniteTimeSpan };
     private static readonly Version CurrentVersion = typeof(AppUpdates).Assembly.GetName().Version!;
+    internal static string InstalledVersion => CurrentVersion.ToString(3);
 
     static AppUpdates() => Client.DefaultRequestHeaders.UserAgent.ParseAdd($"Aurral-App/{CurrentVersion}");
 
@@ -24,8 +26,31 @@ internal static class AppUpdates
     internal static async Task<Update?> CheckAsync()
     {
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(15));
-        var releases = await Client.GetFromJsonAsync<Release[]>(ReleaseApi, timeout.Token);
+        var releases = await Client.GetFromJsonAsync<Release[]>($"{ReleaseApi}?per_page=100", timeout.Token);
         return FindUpdate(releases ?? [], CurrentVersion);
+    }
+
+    internal static async Task<string?> ReadChangelogAsync()
+    {
+        var tag = $"{WindowsTagPrefix}v{InstalledVersion}";
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+        using var response = await Client.GetAsync($"{ReleaseApi}/tags/{tag}", timeout.Token);
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound) return null;
+        response.EnsureSuccessStatusCode();
+        var release = await response.Content.ReadFromJsonAsync<ReleaseNotes>(timeout.Token);
+        if (release?.Tag != tag || string.IsNullOrWhiteSpace(release.Body)) return null;
+
+        var notes = FormatChangelog(release.Body);
+        return notes.Length == 0 ? null : notes;
+    }
+
+    private static string FormatChangelog(string body)
+    {
+        var notes = Regex.Split(body, @"(?im)^#{1,6}\s+download\s*$")[0];
+        notes = Regex.Replace(notes, @"(?im)^#{1,6}\s+what['’]s new\s*$", "");
+        notes = Regex.Replace(notes, @"(?m)^#{1,6}[ \t]+", "");
+        notes = Regex.Replace(notes, @"(?m)^[-*] ", "• ");
+        return notes.Replace("**", "").Replace("`", "").Trim();
     }
 
     private static Update? FindUpdate(IEnumerable<Release> releases, Version current)
@@ -113,6 +138,10 @@ internal static class AppUpdates
         [property: JsonPropertyName("draft")] bool Draft,
         [property: JsonPropertyName("prerelease")] bool Prerelease,
         [property: JsonPropertyName("assets")] Asset[] Assets);
+
+    private sealed record ReleaseNotes(
+        [property: JsonPropertyName("tag_name")] string Tag,
+        [property: JsonPropertyName("body")] string? Body);
 
     private sealed record Asset(
         [property: JsonPropertyName("name")] string Name,

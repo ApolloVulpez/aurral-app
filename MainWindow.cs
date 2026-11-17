@@ -1,3 +1,5 @@
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -12,6 +14,7 @@ internal sealed class MainWindow : Form
     private const int CaptionColor = 35;
     private const int CaptionTextColor = 36;
     private static readonly Color ContentBackground = Color.FromArgb(17, 20, 27);
+    private static readonly string ExternalLinksScript = DiscordPresence.ReadResource("Aurral.ExternalLinks.js");
     private readonly string appData = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Aurral");
     private readonly WebView2 browser = new()
@@ -20,10 +23,20 @@ internal sealed class MainWindow : Form
         DefaultBackgroundColor = ContentBackground,
     };
     private readonly ContextMenuStrip settingsMenu = new SettingsPopup();
+    private readonly ContextMenuStrip changelogMenu = new SettingsPopup("Changelog");
+    private readonly RichTextBox changelogText = new()
+    {
+        BorderStyle = BorderStyle.None,
+        ReadOnly = true,
+        DetectUrls = false,
+        ScrollBars = RichTextBoxScrollBars.Vertical,
+        AccessibleName = "Release notes",
+    };
+    private readonly ToolStripControlHost changelogContent;
     private readonly ToolStripMenuItem changeServer = new SettingsPopup.Item("Change server…", SettingsPopup.Icon.Server) { Enabled = false };
     private readonly ToolStripMenuItem minimizeToTray = new SettingsPopup.Item("Minimize to tray", SettingsPopup.Icon.Tray) { CheckOnClick = true };
     private readonly ToolStripMenuItem discordActivity = new SettingsPopup.Item("Discord Rich Presence", SettingsPopup.Icon.Chat) { CheckOnClick = true };
-    private readonly ToolStripMenuItem discordLinks = new SettingsPopup.Item("Share Listen Links on Discord", SettingsPopup.Icon.Share) { CheckOnClick = true };
+    private readonly ToolStripMenuItem discordLinks = new SettingsPopup.Item("Share Track Details on Discord", SettingsPopup.Icon.Share) { CheckOnClick = true };
     private readonly DiscordPresence discord = new(DiscordPresence.ReadResource("Aurral.DiscordApplicationId.txt"));
     private readonly DiscordArtwork discordArtwork = new();
     private readonly System.Windows.Forms.Timer discordTimer = new() { Interval = 2000 };
@@ -37,6 +50,8 @@ internal sealed class MainWindow : Form
     private bool altPressedAlone;
     private bool quitting;
     private bool refreshingDiscord;
+    private string? installedChangelog;
+    private bool loadingChangelog;
 
     internal MainWindow()
     {
@@ -50,18 +65,31 @@ internal sealed class MainWindow : Form
         KeyPreview = true;
 
         minimizeToTray.Checked = ReadPreference(MinimizeToTrayFile) != "false";
-        discordActivity.Checked = ReadPreference(DiscordActivityFile) != "false";
-        discordLinks.Checked = ReadPreference(DiscordLinksFile) != "false";
+        discordActivity.Checked = ReadPreference(DiscordActivityFile) == "true";
+        discordLinks.Checked = ReadPreference(DiscordLinksFile) == "true";
         discordLinks.Enabled = discordActivity.Checked;
         tray = new TrayControls(Icon, ShowExistingWindow, Quit);
         taskbarPlayback = new TaskbarPlayback(this, tray);
         settingsMenu.Items.AddRange([changeServer, minimizeToTray, new ToolStripSeparator(), discordActivity, discordLinks]);
+        changelogText.BackColor = SystemInformation.HighContrast ? SystemColors.Menu : changelogMenu.BackColor;
+        changelogText.ForeColor = SystemInformation.HighContrast ? SystemColors.MenuText : SettingsPopup.TextColor;
+        changelogText.Font = changelogMenu.Font;
+        changelogContent = new ToolStripControlHost(changelogText) { AutoSize = false, Margin = Padding.Empty };
+        changelogMenu.Items.Add(changelogContent);
+        changelogText.KeyDown += (_, e) =>
+        {
+            if (e.KeyCode != Keys.Escape) return;
+            e.SuppressKeyPress = true;
+            changelogMenu.Close();
+        };
         captionBar = new CaptionBar(this);
         captionToolTips.SetToolTip(captionBar.Back, "Back");
         captionToolTips.SetToolTip(captionBar.Forward, "Forward");
+        captionToolTips.SetToolTip(captionBar.ChangelogButton, "Changelog");
         captionToolTips.SetToolTip(captionBar.UpdateButton, "Check for app updates");
         captionToolTips.SetToolTip(captionBar.SettingsButton, "Settings");
         captionBar.SettingsButton.Click += (_, _) => ToggleSettings();
+        captionBar.ChangelogButton.Click += async (_, _) => await ToggleChangelogAsync();
         captionBar.UpdateButton.Click += async (_, _) => await CheckForAppUpdateAsync(install: true);
         captionBar.Back.Click += (_, _) =>
         {
@@ -84,7 +112,7 @@ internal sealed class MainWindow : Form
                 "Aurral couldn't remember the tray setting for next time.");
         discordActivity.Click += async (_, _) => await ToggleDiscordAsync();
         discordLinks.Click += (_, _) =>
-            SavePreference(DiscordLinksFile, discordLinks.Checked ? "true" : "false", "Aurral couldn't save the Discord listen-link setting.");
+            SavePreference(DiscordLinksFile, discordLinks.Checked ? "true" : "false", "Aurral couldn't save the Discord track details setting.");
         discordTimer.Tick += async (_, _) => await RefreshDiscordAsync();
         Shown += async (_, _) =>
         {
@@ -147,6 +175,7 @@ internal sealed class MainWindow : Form
             discordTimer.Dispose();
             discord.Dispose();
             captionToolTips.Dispose();
+            changelogMenu.Dispose();
             settingsMenu.Dispose();
             taskbarPlayback.Dispose();
             tray.Dispose();
@@ -162,6 +191,7 @@ internal sealed class MainWindow : Form
 
         e.Cancel = true;
         settingsMenu.Close();
+        changelogMenu.Close();
         Hide();
     }
 
@@ -299,9 +329,61 @@ internal sealed class MainWindow : Form
             return;
         }
 
-        var button = captionBar.SettingsButton;
+        changelogMenu.Close();
+        ShowCaptionMenu(settingsMenu, captionBar.SettingsButton);
+    }
+
+    private async Task ToggleChangelogAsync()
+    {
+        if (changelogMenu.Visible)
+        {
+            changelogMenu.Close();
+            return;
+        }
+
+        settingsMenu.Close();
+        SetChangelogText(installedChangelog ?? "Loading release notes…");
+        ShowCaptionMenu(changelogMenu, captionBar.ChangelogButton);
+        if (installedChangelog is not null || loadingChangelog) return;
+
+        loadingChangelog = true;
+        string? notes;
+        try
+        {
+            installedChangelog = await AppUpdates.ReadChangelogAsync();
+            notes = installedChangelog ?? "Release notes are unavailable for this version.";
+        }
+        catch (Exception ex) when (ex is HttpRequestException or OperationCanceledException or JsonException)
+        {
+            notes = "Couldn’t load the changelog. Try again when you’re online.";
+        }
+        finally { loadingChangelog = false; }
+
+        if (!IsDisposed && changelogMenu.Visible) SetChangelogText(notes);
+    }
+
+    private void SetChangelogText(string notes)
+    {
+        var heading = $"Version {AppUpdates.InstalledVersion}";
+        changelogText.Text = $"{heading}\n\n{notes}";
+        using var headingFont = new Font(changelogText.Font, FontStyle.Bold);
+        changelogText.Select(0, heading.Length);
+        changelogText.SelectionFont = headingFont;
+        changelogText.Select(0, 0);
+        changelogText.ScrollToCaret();
+        var width = captionBar.LogicalToDeviceUnits(258);
+        var textSize = TextRenderer.MeasureText(changelogText.Text, changelogText.Font,
+            new Size(width - captionBar.LogicalToDeviceUnits(18), int.MaxValue),
+            TextFormatFlags.WordBreak | TextFormatFlags.NoPrefix);
+        changelogContent.Size = new Size(width,
+            Math.Min(captionBar.LogicalToDeviceUnits(320), textSize.Height + captionBar.LogicalToDeviceUnits(12)));
+        changelogMenu.PerformLayout();
+    }
+
+    private void ShowCaptionMenu(ContextMenuStrip menu, Button button)
+    {
         var y = captionBar.Height - button.Top + captionBar.LogicalToDeviceUnits(4);
-        settingsMenu.Show(button, new Point(button.Width, y), ToolStripDropDownDirection.BelowLeft);
+        menu.Show(button, new Point(button.Width, y), ToolStripDropDownDirection.BelowLeft);
     }
 
     private string AddressFile => Path.Combine(appData, "server.txt");
@@ -347,6 +429,18 @@ internal sealed class MainWindow : Form
                 openingServer = false;
             }
         };
+        core.NewWindowRequested += OnNewWindowRequested;
+        core.DOMContentLoaded += async (_, _) =>
+        {
+            try
+            {
+                await core.ExecuteScriptAsync($"{ExternalLinksScript}({JsonSerializer.Serialize(serverAddress)});");
+            }
+            catch (Exception ex) when (ex is InvalidOperationException or COMException)
+            {
+                Debug.WriteLine(ex);
+            }
+        };
         core.NavigationCompleted += OnNavigationCompleted;
         changeServer.Enabled = true;
 
@@ -357,6 +451,26 @@ internal sealed class MainWindow : Form
         }
 
         if (!await PromptForServerAsync()) Close();
+    }
+
+    private void OnNewWindowRequested(object? sender, CoreWebView2NewWindowRequestedEventArgs args)
+    {
+        // These flows depend on the popup staying connected to the embedded browser.
+        if (args.Name is "spotify-oauth" or "aurral-lastfm-link" or "plex-sign-in" ||
+            !Uri.TryCreate(args.Uri, UriKind.Absolute, out var destination) ||
+            destination.Scheme is not ("http" or "https") ||
+            (browser.Source is { } source && Uri.Compare(source, destination, UriComponents.SchemeAndServer,
+                UriFormat.UriEscaped, StringComparison.OrdinalIgnoreCase) == 0)) return;
+
+        args.Handled = true;
+        try
+        {
+            using var process = Process.Start(new ProcessStartInfo(destination.AbsoluteUri) { UseShellExecute = true });
+        }
+        catch (Win32Exception ex)
+        {
+            Debug.WriteLine(ex);
+        }
     }
 
     private async Task<bool> PromptForServerAsync()

@@ -9,7 +9,7 @@ const { promisify } = require("node:util");
 
 const run = promisify(execFile);
 const repository = "ApolloVulpez/aurral-app";
-const releaseApi = `https://api.github.com/repos/${repository}/releases?per_page=100`;
+const releaseApi = `https://api.github.com/repos/${repository}/releases`;
 const bundleName = "Aurral App.app";
 const bundleId = "io.github.apollovulpez.aurral-app";
 
@@ -36,7 +36,7 @@ function packageNames(version, platform, arch, appImage, flatpak) {
 }
 
 async function checkForUpdate({ version: current, platform, arch, appImage, flatpak }) {
-  const response = await fetch(releaseApi, {
+  const response = await fetch(`${releaseApi}?per_page=100`, {
     headers: { Accept: "application/vnd.github+json", "User-Agent": `Aurral-App/${current}` },
     signal: AbortSignal.timeout(15_000),
   });
@@ -59,6 +59,23 @@ async function checkForUpdate({ version: current, platform, arch, appImage, flat
     }
   }
   return newest;
+}
+
+async function readChangelog(version, platform) {
+  const tag = `${platform === "darwin" ? "macos" : "linux"}-v${version}`;
+  const response = await fetch(`${releaseApi}/tags/${encodeURIComponent(tag)}`, {
+    headers: { Accept: "application/vnd.github+json", "User-Agent": `Aurral-App/${version}` },
+    signal: AbortSignal.timeout(15_000),
+  });
+  if (response.status === 404) return null;
+  if (!response.ok) throw new Error(`GitHub returned HTTP ${response.status}.`);
+  const release = await response.json();
+  if (release.tag_name !== tag || typeof release.body !== "string") return null;
+
+  return release.body.split(/^#{1,6}\s+download\s*$/im, 1)[0]
+    .replace(/^#{1,6}\s+what['’]s new\s*$/im, "")
+    .replace(/^#{1,6}[ \t]+/gm, "").replace(/^[-*] /gm, "• ")
+    .replaceAll("**", "").replaceAll("`", "").trim();
 }
 
 async function downloadUpdate(update, destination) {
@@ -222,4 +239,4 @@ async function installFlatpakRepositoryUpdate(onProgress) {
   }
 }
 
-module.exports = { checkForUpdate, installUpdate, installFlatpakRepositoryUpdate };
+module.exports = { checkForUpdate, readChangelog, installUpdate, installFlatpakRepositoryUpdate };

@@ -141,10 +141,10 @@ internal sealed class TrayControls : IDisposable
         next.Enabled = state?.CanNext == true;
     }
 
-    internal async Task<DiscordPlayback?> ReadDiscordActivityAsync(string serverAddress, bool sharePlayback)
+    internal async Task<DiscordPlayback?> ReadDiscordActivityAsync(string serverAddress, bool shareTrackDetails)
     {
         var result = await ExecuteScriptAsync($"{DiscordActivityScript}({JsonSerializer.Serialize(serverAddress)}, " +
-            $"{JsonSerializer.Serialize(sharePlayback)})");
+            $"{JsonSerializer.Serialize(shareTrackDetails)})");
         if (result is null) return null;
         try
         {

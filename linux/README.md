@@ -1,6 +1,6 @@
 # Aurral App for Linux
 
-Download the x64 [Debian package](https://github.com/ApolloVulpez/aurral-app/releases/download/linux-v0.1.8/Aurral-App-0.1.8-linux-amd64.deb), [AppImage](https://github.com/ApolloVulpez/aurral-app/releases/download/linux-v0.1.8/Aurral-App-0.1.8-linux-x86_64.AppImage), or [Flatpak bundle](https://github.com/ApolloVulpez/aurral-app/releases/download/linux-v0.1.8/Aurral-App-0.1.8-linux-x86_64.flatpak) from the [Linux release](https://github.com/ApolloVulpez/aurral-app/releases/tag/linux-v0.1.8).
+Download the x64 [Debian package](https://github.com/ApolloVulpez/aurral-app/releases/download/linux-v0.1.9/Aurral-App-0.1.9-linux-amd64.deb), [AppImage](https://github.com/ApolloVulpez/aurral-app/releases/download/linux-v0.1.9/Aurral-App-0.1.9-linux-x86_64.AppImage), or [Flatpak bundle](https://github.com/ApolloVulpez/aurral-app/releases/download/linux-v0.1.9/Aurral-App-0.1.9-linux-x86_64.flatpak) from the [Linux release](https://github.com/ApolloVulpez/aurral-app/releases/tag/linux-v0.1.9).
 
 | Distribution | Package |
 | --- | --- |
@@ -15,7 +15,7 @@ Use a current, supported release of your distribution.
 Install the package through your software installer, or run this command in the folder containing the download.
 
 ```sh
-sudo apt install ./Aurral-App-0.1.8-linux-amd64.deb
+sudo apt install ./Aurral-App-0.1.9-linux-amd64.deb
 ```
 
 Open **Aurral App** from your application menu.
@@ -25,8 +25,8 @@ Open **Aurral App** from your application menu.
 In the file's properties, allow it to run as a program, then open it. You can also run these commands in the download folder.
 
 ```sh
-chmod +x Aurral-App-0.1.8-linux-x86_64.AppImage
-./Aurral-App-0.1.8-linux-x86_64.AppImage
+chmod +x Aurral-App-0.1.9-linux-x86_64.AppImage
+./Aurral-App-0.1.9-linux-x86_64.AppImage
 ```
 
 The AppImage uses a runtime that avoids a dependency on FUSE 2. On Ubuntu and Mint, the Debian package also supplies the desktop integration needed by their application security settings.
@@ -38,7 +38,7 @@ Gear Lever can add an AppImage to your application menu.
 With Flatpak installed, run this command from the download folder.
 
 ```sh
-flatpak install --user --bundle ./Aurral-App-0.1.8-linux-x86_64.flatpak
+flatpak install --user --bundle ./Aurral-App-0.1.9-linux-x86_64.flatpak
 ```
 
 If you already installed the 0.1.7 bundle, add `--reinstall` to the command above once to switch it to the signed update repository. Use the same installation scope as before. The bundle keeps your existing Flatpak server settings and sign-in.

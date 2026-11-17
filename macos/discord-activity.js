@@ -1,4 +1,4 @@
-((serverUrl, sharePlayback) => {
+((serverUrl, shareTrackDetails) => {
   const server = new URL(serverUrl);
   const origin = server.origin;
   if (server.protocol === "http:") server.protocol = "https:";
@@ -123,37 +123,35 @@
   if (cover) activity.assets = { large_image: cover, large_text: text(track.album) };
   const result = { activity, coverSearch };
 
-  if (!sharePlayback || !track.artist?.trim()) return result;
+  if (!shareTrackDetails || !track.artist?.trim()) return result;
   const trackTitle = track.title.trim();
   const artistName = track.artist.trim();
   const albumTitle = track.album?.trim() || undefined;
   const key = JSON.stringify([trackTitle, artistName, albumTitle]);
-  const links = window.__aurralDiscordListenLinks ??= new Map();
+  const links = window.__aurralDiscordDetailsLinks ??= new Map();
   const cached = links.get(key);
   if (cached && cached.until > Date.now()) {
-    if (cached.url) activity.buttons = [{ label: "Listen On Aurral", url: cached.url }];
+    if (cached.url) activity.buttons = [{ label: "View on Aurral", url: cached.url }];
     return result;
   }
 
-  if (links.size >= 100) links.delete(links.keys().next().value);
-  // Publish at most once per track while the request is in flight. Unsupported servers retry later.
+  // Deduplicate requests while they're in flight and briefly back off after failures.
   const entry = { until: Date.now() + 60_000 };
   links.set(key, entry);
   void (async () => {
     const metadata = { title: trackTitle, artistName, albumTitle };
-    const response = await apiRequest("share-links", {
+    const response = await apiRequest("share-links/plain", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        kind: "track", ...metadata, shareFiles: true, allowDownload: false, expiresIn: "1d",
         manifest: { kind: "track", ...metadata, tracks: [metadata] },
       }),
     });
     if (!response.ok) return;
     const { link } = await response.json();
-    if (link?.shareFiles !== true || !Number.isFinite(link.expiresAt) || link.expiresAt <= Date.now() ||
+    if (link?.shareFiles !== false || link.expiresAt !== null ||
         !/^https:\/\/aurral\.org\/s\/s[A-Za-z0-9_-]{15}$/.test(link.url)) return;
     entry.url = link.url;
-    entry.until = link.expiresAt;
+    entry.until = Infinity;
   })().catch(() => {});
   return result;
 })
