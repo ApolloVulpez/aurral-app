@@ -44,7 +44,7 @@ flatpak build-export --arch=x86_64 --gpg-sign="$AURRAL_FLATPAK_GPG_KEY" --gpg-ho
   "$AURRAL_FLATPAK_REPO" "$work/build" stable
 mkdir -p "$(dirname "$output")"
 flatpak build-bundle --arch=x86_64 --runtime-repo=https://dl.flathub.org/repo/flathub.flatpakrepo \
-  --repo-url=https://raw.githubusercontent.com/ApolloVulpez/aurral-app/refs/heads/codex/flatpak-stable-feed \
+  --repo-url=https://raw.githubusercontent.com/ApolloVulpez/aurral-app/refs/heads/flatpak-stable-feed \
   --gpg-keys="$work/release.gpg" "$AURRAL_FLATPAK_REPO" "$work/aurral.flatpak" "$app_id" stable
 mv -- "$work/aurral.flatpak" "$output"
 echo "Created $output"

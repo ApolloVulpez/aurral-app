@@ -41,7 +41,14 @@ With Flatpak installed, run this command from the download folder.
 flatpak install --user --bundle ./Aurral-App-0.1.9-linux-x86_64.flatpak
 ```
 
-If you already installed the 0.1.7 bundle, add `--reinstall` to the command above once to switch it to the signed update repository. Use the same installation scope as before. The bundle keeps your existing Flatpak server settings and sign-in.
+If you installed Aurral from a bundle downloaded before the update feed moved, download the current bundle again. Remove the old installation and install the new bundle using the same scope. These commands keep your server settings and sign-in.
+
+```sh
+flatpak uninstall --user io.github.apollovulpez.aurral-app
+flatpak install --user --bundle ./Aurral-App-0.1.9-linux-x86_64.flatpak
+```
+
+For a system-wide installation, use `--system` in both commands.
 
 The first install may download the Freedesktop runtime from Flathub. Open **Aurral App** from your application menu. Click the title-bar update button when it lights up. Flatpak installs the update and Aurral prompts you to reopen it.
 
@@ -76,4 +83,4 @@ flatpak install --user flathub org.freedesktop.Platform//25.08 org.freedesktop.S
 npm run build:flatpak
 ```
 
-The bundle is written to `dist/linux`. Publish the signed repository to `codex/flatpak-stable-feed` before publishing the matching GitHub release assets.
+The bundle is written to `dist/linux`. Publish the signed repository to `flatpak-stable-feed` before publishing the matching GitHub release assets.
