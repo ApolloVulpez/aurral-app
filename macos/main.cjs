@@ -697,7 +697,10 @@ if (!app.requestSingleInstanceLock({ playbackAction: launcherPlaybackAction }) |
       tray.on("right-click", showTrayMenu);
     } else {
       const { LinuxMediaControls } = require("./media-controls.cjs");
-      mediaControls = new LinuxMediaControls(require("./package.json").desktopName, playback, showAurral);
+      mediaControls = new LinuxMediaControls(require("./package.json").desktopName, playback, showAurral, {
+        directory: path.join(app.getPath("userData"), "Media Artwork"),
+        fetch: url => browserSession.fetch(url, { redirect: "follow", signal: AbortSignal.timeout(15_000) }),
+      });
     }
     await refreshPlaybackControls();
     playbackRefresh = setInterval(refreshPlaybackControls, 1000);

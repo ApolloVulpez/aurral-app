@@ -28,6 +28,21 @@ function installMediaBridge(serverUrl) {
     else handlers.delete(action);
   };
 
+  // The largest web artwork, so desktop media controls can show the cover.
+  const coverArt = artwork => {
+    let best;
+    let bestSize = -1;
+    for (const image of artwork ?? []) {
+      let url;
+      try { url = new URL(image.src, location.href); } catch { continue; }
+      if (!["http:", "https:"].includes(url.protocol) || url.href.length > 4096) continue;
+      const size = Math.max(0, ...String(image.sizes ?? "").split(/\s+/)
+        .map(value => /^(\d+)x(\d+)$/i.exec(value)).filter(Boolean).map(match => match[1] * match[2]));
+      if (size >= bestSize) [best, bestSize] = [url.href, size];
+    }
+    return best;
+  };
+
   window.__aurralTrayMedia = command => {
     const playing = session.playbackState === "playing";
     const toggle = playing ? "pause" : "play";
@@ -47,7 +62,7 @@ function installMediaBridge(serverUrl) {
         canNext: handlers.has("nexttrack"),
         canPlay: handlers.has("play"),
         canPause: handlers.has("pause"),
-        track: track ? { title: track.title, artist: track.artist, album: track.album } : null,
+        track: track ? { title: track.title, artist: track.artist, album: track.album, artwork: coverArt(track.artwork) } : null,
       };
     }
 

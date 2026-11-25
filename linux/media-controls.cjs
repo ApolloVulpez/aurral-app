@@ -1,8 +1,68 @@
 const { createHash } = require("node:crypto");
+const fs = require("node:fs/promises");
+const path = require("node:path");
+const { pathToFileURL } = require("node:url");
 const { Variant, interface: { ACCESS_READ, Interface, method, property }, sessionBus } = require("@jellybrick/dbus-next");
 
 const objectPath = "/org/mpris/MediaPlayer2";
 const servicePrefix = "org.mpris.MediaPlayer2";
+const maxArtworkBytes = 10 * 1024 * 1024;
+const artworkTypes = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/gif": "gif", "image/avif": "avif" };
+
+// Desktop shells load mpris:artUrl themselves and lack the page's sign-in, so
+// cache the cover with the app's session and hand them a local file instead.
+class ArtworkCache {
+  constructor(directory, fetchImage, changed) {
+    this.directory = directory;
+    this.fetchImage = fetchImage;
+    this.changed = changed;
+  }
+
+  source;
+  url = "";
+  generation = 0;
+
+  request(source) {
+    if (typeof source !== "string" || !/^https?:\/\//i.test(source)) source = undefined;
+    if (source === this.source) return this.url;
+    this.source = source;
+    this.url = "";
+    const generation = ++this.generation;
+    if (source) {
+      void this.load(source, generation).then(url => {
+        if (url && generation === this.generation) {
+          this.url = url;
+          this.changed();
+        }
+      }).catch(() => {});
+    }
+    return "";
+  }
+
+  async load(source, generation) {
+    const response = await this.fetchImage(source);
+    if (!response.ok) return "";
+    const extension = artworkTypes[response.headers.get("content-type")?.split(";")[0].trim().toLowerCase()];
+    if (!extension || Number(response.headers.get("content-length")) > maxArtworkBytes) return "";
+    const data = Buffer.from(await response.arrayBuffer());
+    if (!data.length || data.length > maxArtworkBytes || generation !== this.generation) return "";
+
+    await fs.mkdir(this.directory, { recursive: true, mode: 0o700 });
+    const name = `${createHash("sha256").update(source).digest("hex").slice(0, 32)}.${extension}`;
+    const file = path.join(this.directory, name);
+    await fs.writeFile(`${file}.tmp`, data, { mode: 0o600 });
+    await fs.rename(`${file}.tmp`, file);
+    if (generation !== this.generation) {
+      await fs.rm(file, { force: true });
+      return "";
+    }
+    // Keep only the current cover.
+    for (const entry of await fs.readdir(this.directory)) {
+      if (entry !== name) await fs.rm(path.join(this.directory, entry), { force: true });
+    }
+    return pathToFileURL(file).href;
+  }
+}
 
 function exportMembers(instance, properties, methods) {
   for (const [name, signature] of Object.entries(properties)) {
@@ -62,6 +122,7 @@ class Player extends Interface {
   CanPause = false;
   Metadata = {};
   trackKey = "";
+  artUrl = "";
 
   Next() { if (this.CanGoNext) void this.playback("nexttrack"); }
   Previous() { if (this.CanGoPrevious) void this.playback("previoustrack"); }
@@ -73,7 +134,7 @@ class Player extends Interface {
   SetPosition() {}
   OpenUri() {}
 
-  setState(state) {
+  setState(state, artUrl = "") {
     const properties = {
       PlaybackStatus: state.playing ? "Playing" : "Paused",
       CanGoPrevious: state.canPrevious === true,
@@ -89,8 +150,9 @@ class Player extends Interface {
     const [title, artist, album] = [state.track?.title, state.track?.artist, state.track?.album]
       .map(value => typeof value === "string" ? value.replaceAll("\0", "") : "");
     const trackKey = JSON.stringify([title, artist, album]);
-    if (trackKey !== this.trackKey) {
+    if (trackKey !== this.trackKey || artUrl !== this.artUrl) {
       this.trackKey = trackKey;
+      this.artUrl = artUrl;
       const id = createHash("sha256").update(trackKey).digest("hex");
       changes.Metadata = this.Metadata = {
         "mpris:trackid": new Variant("o", `${objectPath}/Track/${id}`),
@@ -98,6 +160,7 @@ class Player extends Interface {
         "xesam:artist": new Variant("as", artist ? [artist] : []),
         "xesam:album": new Variant("s", album),
       };
+      if (artUrl) this.Metadata["mpris:artUrl"] = new Variant("s", artUrl);
     }
 
     if (Object.keys(changes).length) Interface.emitPropertiesChanged(this, changes);
@@ -105,22 +168,30 @@ class Player extends Interface {
 }
 
 class LinuxMediaControls {
-  constructor(desktopName, playback, showWindow) {
+  constructor(desktopName, playback, showWindow, artwork) {
     const desktopEntry = desktopName.replace(/\.desktop$/, "");
     this.name = `${servicePrefix}.${desktopEntry}`;
     this.mediaPlayer = new MediaPlayer(desktopEntry, showWindow);
     this.player = new Player(playback);
+    if (artwork) {
+      this.artwork = new ArtworkCache(artwork.directory, artwork.fetch, () => {
+        if (this.state) this.player.setState(this.state, this.artwork.url);
+      });
+    }
   }
 
   bus = null;
   retryAfter = 0;
+  state = null;
 
   update(state) {
     if (!state || !(state.canToggle || state.canNext || state.canPrevious)) {
+      this.state = null;
       this.disconnect();
       return;
     }
-    this.player.setState(state);
+    this.state = state;
+    this.player.setState(state, this.artwork?.request(state.track?.artwork) ?? "");
     if (this.bus || Date.now() < this.retryAfter) return;
 
     const retry = () => {
