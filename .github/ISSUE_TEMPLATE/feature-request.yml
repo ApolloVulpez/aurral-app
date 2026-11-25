@@ -5,7 +5,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Use this form for one desktop app idea. Request server features, or changes you would also want in a regular browser, from the [main Aurral project](https://github.com/lklynet/aurral/issues).
+        Use this form to request a feature you'd like to see in the desktop application. Please make 1 request per feature.
 
   - type: dropdown
     id: area
