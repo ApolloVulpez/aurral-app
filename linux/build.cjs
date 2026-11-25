@@ -51,7 +51,9 @@ async function buildLinux() {
         if (flatpak) return;
         // Supply the AppImage entry point without adding Chromium launch flags.
         const appRun = path.join(appOutDir, "AppRun");
-        await fs.copyFile(path.join(__dirname, "AppRun"), appRun);
+        // A CRLF checkout breaks the shebang ("bash\r"), so always write LF.
+        const script = await fs.readFile(path.join(__dirname, "AppRun"), "utf8");
+        await fs.writeFile(appRun, script.replace(/\r\n?/g, "\n"));
         await fs.chmod(appRun, 0o755);
       },
       linux: {
