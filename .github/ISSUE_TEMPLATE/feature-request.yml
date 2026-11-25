@@ -1,0 +1,64 @@
+name: Feature request
+description: Suggest a new feature or an improvement to Aurral App.
+title: "[Feature request]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for one desktop app idea. Request server features, or changes you would also want in a regular browser, from the [main Aurral project](https://github.com/lklynet/aurral/issues).
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Installation or launch
+        - Connecting to a server
+        - Window controls or keyboard shortcuts
+        - Tray or media controls
+        - Discord Rich Presence
+        - App updates
+        - Not sure or other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platforms
+    attributes:
+      label: Which platforms should it cover?
+      multiple: true
+      options:
+        - Windows
+        - macOS
+        - Linux
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      description: Describe what you're trying to do and what gets in the way today.
+      placeholder: When I…, I have to…
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like Aurral App to do?
+      description: Describe the behavior you want. Include where it would appear and how you'd use it.
+    validations:
+      required: true
+
+  - type: textarea
+    id: examples
+    attributes:
+      label: Examples from other apps
+      description: If another app already does this, name it and attach a screenshot.
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Workarounds or alternatives
+      description: Anything you use today instead, or other ways this could work.
