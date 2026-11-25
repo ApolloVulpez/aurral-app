@@ -7,7 +7,7 @@
 
 <p align="center">
   <a href="https://github.com/ApolloVulpez/aurral-app/releases/tag/windows-v0.1.6"><img src="https://img.shields.io/badge/Windows-v0.1.6-84cc16" alt="Windows release" /></a>
-  <a href="https://github.com/ApolloVulpez/aurral-app/releases/tag/macos-v0.1.6"><img src="https://img.shields.io/badge/macOS-v0.1.6-84cc16" alt="macOS release" /></a>
+  <a href="https://github.com/ApolloVulpez/aurral-app/releases/tag/macos-v0.1.7"><img src="https://img.shields.io/badge/macOS-v0.1.7-84cc16" alt="macOS release" /></a>
   <a href="https://github.com/ApolloVulpez/aurral-app/releases/tag/linux-v0.1.10"><img src="https://img.shields.io/badge/Linux-v0.1.10-84cc16" alt="Linux release" /></a>
 </p>
 
@@ -33,7 +33,7 @@ The installer includes .NET and installs the Microsoft Edge WebView2 Runtime if 
 
 ### macOS
 
-Download the DMG for [Apple Silicon](https://github.com/ApolloVulpez/aurral-app/releases/download/macos-v0.1.6/Aurral-App-0.1.6-macOS-arm64.dmg) or [Intel](https://github.com/ApolloVulpez/aurral-app/releases/download/macos-v0.1.6/Aurral-App-0.1.6-macOS-x64.dmg). Open the disk image and drag **Aurral App** into **Applications**. These builds require macOS 13 or later. They are not Apple-notarized, so macOS may block the first launch.
+Download the DMG for [Apple Silicon](https://github.com/ApolloVulpez/aurral-app/releases/download/macos-v0.1.7/Aurral-App-0.1.7-macOS-arm64.dmg) or [Intel](https://github.com/ApolloVulpez/aurral-app/releases/download/macos-v0.1.7/Aurral-App-0.1.7-macOS-x64.dmg). Open the disk image and drag **Aurral App** into **Applications**. These builds require macOS 13 or later. They are signed and notarized by Apple.
 
 ### Linux
 
