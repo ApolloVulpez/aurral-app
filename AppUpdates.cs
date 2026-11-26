@@ -11,15 +11,15 @@ namespace Aurral.App;
 
 internal static class AppUpdates
 {
-    private const string ReleaseApi = "https://api.github.com/repos/ApolloVulpez/aurral-app/releases";
-    private const string ReleaseDownloads = "https://github.com/ApolloVulpez/aurral-app/releases/download/";
+    private const string ReleaseApi = "https://api.github.com/repos/ApolloVulpez/aurral-desktop/releases";
+    private const string ReleaseDownloads = "https://github.com/ApolloVulpez/aurral-desktop/releases/download/";
     private const string WindowsTagPrefix = "windows-";
     private const string UninstallKey = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{96AB4288-F7A0-4C16-B0D8-DFFAC7CD6659}_is1";
     private static readonly HttpClient Client = new() { Timeout = Timeout.InfiniteTimeSpan };
     private static readonly Version CurrentVersion = typeof(AppUpdates).Assembly.GetName().Version!;
     internal static string InstalledVersion => CurrentVersion.ToString(3);
 
-    static AppUpdates() => Client.DefaultRequestHeaders.UserAgent.ParseAdd($"Aurral-App/{CurrentVersion}");
+    static AppUpdates() => Client.DefaultRequestHeaders.UserAgent.ParseAdd($"Aurral-Desktop/{CurrentVersion}");
 
     internal sealed record Update(Version Version, string Url, long Size, string? Digest);
 

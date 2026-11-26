@@ -2,21 +2,21 @@
 Type=Application
 Name=Aurral App
 Comment=Connect to your Aurral music server
-Exec=aurral-app
-Icon=io.github.apollovulpez.aurral-app
-StartupWMClass=io.github.apollovulpez.aurral-app
+Exec=aurral-desktop
+Icon=io.github.apollovulpez.aurral-desktop
+StartupWMClass=io.github.apollovulpez.aurral-desktop
 Terminal=false
 Categories=AudioVideo;Audio;Player;
 Actions=PreviousTrack;PlayPause;NextTrack;
 
 [Desktop Action PreviousTrack]
 Name=Previous Track
-Exec=aurral-app --aurral-playback=previoustrack
+Exec=aurral-desktop --aurral-playback=previoustrack
 
 [Desktop Action PlayPause]
 Name=Play/Pause
-Exec=aurral-app --aurral-playback=toggle
+Exec=aurral-desktop --aurral-playback=toggle
 
 [Desktop Action NextTrack]
 Name=Next Track
-Exec=aurral-app --aurral-playback=nexttrack
+Exec=aurral-desktop --aurral-playback=nexttrack

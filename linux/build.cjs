@@ -25,14 +25,14 @@ async function buildLinux() {
   await fs.cp(path.join(shared, "assets"), path.join(staging, "assets"), { recursive: true });
   await fs.copyFile(path.join(root, "LICENSE"), path.join(staging, "LICENSE"));
   await fs.writeFile(path.join(staging, "package.json"), JSON.stringify({
-    name: "aurral-app",
+    name: "aurral-desktop",
     productName: "Aurral App",
-    desktopName: "io.github.apollovulpez.aurral-app.desktop",
+    desktopName: "io.github.apollovulpez.aurral-desktop.desktop",
     version,
     dependencies,
     main: "main.cjs",
     description: "A desktop front end for your Aurral server.",
-    homepage: "https://github.com/ApolloVulpez/aurral-app",
+    homepage: "https://github.com/ApolloVulpez/aurral-desktop",
     author: "Aurral App Contributors",
     license: "MIT",
   }, null, 2));
@@ -41,7 +41,7 @@ async function buildLinux() {
     targets: Platform.LINUX.createTarget(flatpak ? ["dir"] : ["deb", "AppImage"], Arch.x64),
     publish: "never",
     config: {
-      appId: "io.github.apollovulpez.aurral-app",
+      appId: "io.github.apollovulpez.aurral-desktop",
       productName: "Aurral App",
       electronVersion,
       directories: { app: staging, output, buildResources: path.join(shared, "assets") },
@@ -57,12 +57,12 @@ async function buildLinux() {
         await fs.chmod(appRun, 0o755);
       },
       linux: {
-        executableName: "aurral-app",
+        executableName: "aurral-desktop",
         syncDesktopName: true,
         category: "AudioVideo",
         icon: path.join(__dirname, "icons"),
         maintainer: "Aurral App Contributors",
-        artifactName: "Aurral-App-${version}-linux-${arch}.${ext}",
+        artifactName: "Aurral-Desktop-${version}-linux-${arch}.${ext}",
         desktop: {
           entry: {
             Name: "Aurral App",
@@ -72,12 +72,14 @@ async function buildLinux() {
         },
       },
       deb: {
+        // The package was named aurral-app before the rename and installs the same files.
+        fpm: ["--conflicts", "aurral-app", "--replaces", "aurral-app"],
         desktop: {
           entry: { Actions: "PreviousTrack;PlayPause;NextTrack;" },
           desktopActions: {
-            PreviousTrack: { Name: "Previous Track", Exec: '"/opt/Aurral App/aurral-app" --aurral-playback=previoustrack' },
-            PlayPause: { Name: "Play/Pause", Exec: '"/opt/Aurral App/aurral-app" --aurral-playback=toggle' },
-            NextTrack: { Name: "Next Track", Exec: '"/opt/Aurral App/aurral-app" --aurral-playback=nexttrack' },
+            PreviousTrack: { Name: "Previous Track", Exec: '"/opt/Aurral App/aurral-desktop" --aurral-playback=previoustrack' },
+            PlayPause: { Name: "Play/Pause", Exec: '"/opt/Aurral App/aurral-desktop" --aurral-playback=toggle' },
+            NextTrack: { Name: "Next Track", Exec: '"/opt/Aurral App/aurral-desktop" --aurral-playback=nexttrack' },
           },
         },
       },

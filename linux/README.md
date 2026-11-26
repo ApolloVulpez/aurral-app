@@ -1,6 +1,6 @@
 # Aurral App for Linux
 
-Download the x64 [Debian package](https://github.com/ApolloVulpez/aurral-app/releases/download/linux-v0.1.10/Aurral-App-0.1.10-linux-amd64.deb), [AppImage](https://github.com/ApolloVulpez/aurral-app/releases/download/linux-v0.1.10/Aurral-App-0.1.10-linux-x86_64.AppImage), or [Flatpak bundle](https://github.com/ApolloVulpez/aurral-app/releases/download/linux-v0.1.10/Aurral-App-0.1.10-linux-x86_64.flatpak) from the [Linux release](https://github.com/ApolloVulpez/aurral-app/releases/tag/linux-v0.1.10).
+Download the x64 [Debian package](https://github.com/ApolloVulpez/aurral-desktop/releases/download/linux-v0.1.10/Aurral-Desktop-0.1.10-linux-amd64.deb), [AppImage](https://github.com/ApolloVulpez/aurral-desktop/releases/download/linux-v0.1.10/Aurral-Desktop-0.1.10-linux-x86_64.AppImage), or [Flatpak bundle](https://github.com/ApolloVulpez/aurral-desktop/releases/download/linux-v0.1.10/Aurral-Desktop-0.1.10-linux-x86_64.flatpak) from the [Linux release](https://github.com/ApolloVulpez/aurral-desktop/releases/tag/linux-v0.1.10).
 
 | Distribution | Package |
 | --- | --- |
@@ -15,7 +15,7 @@ Use a current, supported release of your distribution.
 Install the package through your software installer, or run this command in the folder containing the download.
 
 ```sh
-sudo apt install ./Aurral-App-0.1.10-linux-amd64.deb
+sudo apt install ./Aurral-Desktop-0.1.10-linux-amd64.deb
 ```
 
 Open **Aurral App** from your application menu.
@@ -25,8 +25,8 @@ Open **Aurral App** from your application menu.
 In the file's properties, allow it to run as a program, then open it. You can also run these commands in the download folder.
 
 ```sh
-chmod +x Aurral-App-0.1.10-linux-x86_64.AppImage
-./Aurral-App-0.1.10-linux-x86_64.AppImage
+chmod +x Aurral-Desktop-0.1.10-linux-x86_64.AppImage
+./Aurral-Desktop-0.1.10-linux-x86_64.AppImage
 ```
 
 The AppImage uses a runtime that avoids a dependency on FUSE 2. On Ubuntu and Mint, the Debian package also supplies the desktop integration needed by their application security settings.
@@ -38,14 +38,14 @@ Gear Lever can add an AppImage to your application menu.
 With Flatpak installed, run this command from the download folder.
 
 ```sh
-flatpak install --user --bundle ./Aurral-App-0.1.10-linux-x86_64.flatpak
+flatpak install --user --bundle ./Aurral-Desktop-0.1.10-linux-x86_64.flatpak
 ```
 
-If you installed Aurral from a bundle downloaded before the update feed moved, download the current bundle again. Remove the old installation and install the new bundle using the same scope. These commands keep your server settings and sign-in.
+Releases before the rename used the Flatpak ID `io.github.apollovulpez.aurral-app`. If you have that installed, remove it and install the current bundle using the same scope. The new ID starts with a fresh profile, so enter your server URL and sign in again.
 
 ```sh
 flatpak uninstall --user io.github.apollovulpez.aurral-app
-flatpak install --user --bundle ./Aurral-App-0.1.10-linux-x86_64.flatpak
+flatpak install --user --bundle ./Aurral-Desktop-0.1.10-linux-x86_64.flatpak
 ```
 
 For a system-wide installation, use `--system` in both commands.
@@ -62,7 +62,7 @@ During playback, KDE Plasma can show **Previous**, **Play/Pause**, and **Next** 
 
 Closing the window keeps playback running. Turn off **Settings → Minimize to Tray** if you want closing the window to quit. Desktop environments control whether a tray icon appears. If it is hidden, launching Aurral App again restores the existing window.
 
-Aurral App displays your server's web interface. Report server and web interface issues to the [main Aurral project](https://github.com/lklynet/aurral/issues). Report Linux packaging, tray, and other desktop issues to the [Aurral App tracker](https://github.com/ApolloVulpez/aurral-app/issues).
+Aurral App displays your server's web interface. Report server and web interface issues to the [main Aurral project](https://github.com/lklynet/aurral/issues). Report Linux packaging, tray, and other desktop issues to the [Aurral App tracker](https://github.com/ApolloVulpez/aurral-desktop/issues).
 
 ## Build locally
 

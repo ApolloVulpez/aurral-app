@@ -1,3 +1,3 @@
 #!/bin/sh
 export TMPDIR="$XDG_RUNTIME_DIR/app/$FLATPAK_ID"
-exec zypak-wrapper /app/lib/aurral-app/aurral-app "$@"
+exec zypak-wrapper /app/lib/aurral-desktop/aurral-desktop "$@"

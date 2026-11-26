@@ -16,7 +16,7 @@ iconutil -c icns "$stage/AppIcon.iconset" -o "$stage/AppIcon.icns"
 
 ./node_modules/.bin/electron-packager . "Aurral App" \
   --platform=darwin --arch=universal --out="$out" --overwrite --asar \
-  --app-bundle-id=io.github.apollovulpez.aurral-app \
+  --app-bundle-id=io.github.apollovulpez.aurral-desktop \
   --icon="$stage/AppIcon.icns" --extend-info=Info.plist \
   --ignore='^/(build-dmg\.sh|package-lock\.json|Info\.plist)$'
 
@@ -28,7 +28,7 @@ lipo "$bundle/Contents/MacOS/Aurral App" -verify_arch x86_64 arm64
 
 ditto "$bundle" "$stage/image/Aurral App.app"
 ln -s /Applications "$stage/image/Applications"
-dmg="$out/Aurral-App-${version}-macOS-universal.dmg"
+dmg="$out/Aurral-Desktop-${version}-macOS-universal.dmg"
 hdiutil create -ov -volname "Aurral App" -srcfolder "$stage/image" -format UDZO -fs HFS+ "$dmg"
 hdiutil verify "$dmg"
 (cd "$out" && shasum -a 256 "$(basename "$dmg")" > "$(basename "$dmg").sha256")

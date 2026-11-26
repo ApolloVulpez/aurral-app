@@ -8,10 +8,10 @@ const { pipeline } = require("node:stream/promises");
 const { promisify } = require("node:util");
 
 const run = promisify(execFile);
-const repository = "ApolloVulpez/aurral-app";
+const repository = "ApolloVulpez/aurral-desktop";
 const releaseApi = `https://api.github.com/repos/${repository}/releases`;
 const bundleName = "Aurral App.app";
-const bundleId = "io.github.apollovulpez.aurral-app";
+const bundleId = "io.github.apollovulpez.aurral-desktop";
 
 function compareVersions(left, right) {
   const other = right.split(".").map(Number);
@@ -22,7 +22,7 @@ function compareVersions(left, right) {
 }
 
 function packageNames(version, platform, arch, appImage, flatpak) {
-  const name = `Aurral-App-${version}`;
+  const name = `Aurral-Desktop-${version}`;
   if (platform === "darwin") {
     const macArch = { arm64: "arm64", x64: "x64" }[arch];
     return macArch ? [`${name}-macOS-universal.dmg`, `${name}-macOS-${macArch}.dmg`] : [];
@@ -37,7 +37,7 @@ function packageNames(version, platform, arch, appImage, flatpak) {
 
 async function checkForUpdate({ version: current, platform, arch, appImage, flatpak }) {
   const response = await fetch(`${releaseApi}?per_page=100`, {
-    headers: { Accept: "application/vnd.github+json", "User-Agent": `Aurral-App/${current}` },
+    headers: { Accept: "application/vnd.github+json", "User-Agent": `Aurral-Desktop/${current}` },
     signal: AbortSignal.timeout(15_000),
   });
   if (!response.ok) throw new Error(`GitHub returned HTTP ${response.status}.`);
@@ -64,7 +64,7 @@ async function checkForUpdate({ version: current, platform, arch, appImage, flat
 async function readChangelog(version, platform) {
   const tag = `${platform === "darwin" ? "macos" : "linux"}-v${version}`;
   const response = await fetch(`${releaseApi}/tags/${encodeURIComponent(tag)}`, {
-    headers: { Accept: "application/vnd.github+json", "User-Agent": `Aurral-App/${version}` },
+    headers: { Accept: "application/vnd.github+json", "User-Agent": `Aurral-Desktop/${version}` },
     signal: AbortSignal.timeout(15_000),
   });
   if (response.status === 404) return null;

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
-  <id>io.github.apollovulpez.aurral-app</id>
+  <id>io.github.apollovulpez.aurral-desktop</id>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>MIT</project_license>
   <name>Aurral App</name>
@@ -11,7 +11,7 @@
   <description>
     <p>Browse and play music from your Aurral server in a desktop window. Control playback from the system tray and show your current track on Discord.</p>
   </description>
-  <url type="homepage">https://github.com/ApolloVulpez/aurral-app</url>
-  <url type="bugtracker">https://github.com/ApolloVulpez/aurral-app/issues</url>
-  <launchable type="desktop-id">io.github.apollovulpez.aurral-app.desktop</launchable>
+  <url type="homepage">https://github.com/ApolloVulpez/aurral-desktop</url>
+  <url type="bugtracker">https://github.com/ApolloVulpez/aurral-desktop/issues</url>
+  <launchable type="desktop-id">io.github.apollovulpez.aurral-desktop.desktop</launchable>
 </component>

@@ -6,9 +6,9 @@
 </div>
 
 <p align="center">
-  <a href="https://github.com/ApolloVulpez/aurral-app/releases/tag/windows-v0.1.6"><img src="https://img.shields.io/badge/Windows-v0.1.6-84cc16" alt="Windows release" /></a>
-  <a href="https://github.com/ApolloVulpez/aurral-app/releases/tag/macos-v0.1.7"><img src="https://img.shields.io/badge/macOS-v0.1.7-84cc16" alt="macOS release" /></a>
-  <a href="https://github.com/ApolloVulpez/aurral-app/releases/tag/linux-v0.1.10"><img src="https://img.shields.io/badge/Linux-v0.1.10-84cc16" alt="Linux release" /></a>
+  <a href="https://github.com/ApolloVulpez/aurral-desktop/releases/tag/windows-v0.1.6"><img src="https://img.shields.io/badge/Windows-v0.1.6-84cc16" alt="Windows release" /></a>
+  <a href="https://github.com/ApolloVulpez/aurral-desktop/releases/tag/macos-v0.1.7"><img src="https://img.shields.io/badge/macOS-v0.1.7-84cc16" alt="macOS release" /></a>
+  <a href="https://github.com/ApolloVulpez/aurral-desktop/releases/tag/linux-v0.1.10"><img src="https://img.shields.io/badge/Linux-v0.1.10-84cc16" alt="Linux release" /></a>
 </p>
 
 <p align="center">A Windows, macOS, and Linux desktop front end for your Aurral server.</p>
@@ -21,23 +21,23 @@
 </p>
 
 > [!IMPORTANT]
-> Aurral App requires a running Aurral server and displays that server's web interface. Report server bugs and issues you can also reproduce in a browser to the [main Aurral project](https://github.com/lklynet/aurral/issues). Report installation, tray, and other desktop-only issues to the [Aurral App tracker](https://github.com/ApolloVulpez/aurral-app/issues).
+> Aurral App requires a running Aurral server and displays that server's web interface. Report server bugs and issues you can also reproduce in a browser to the [main Aurral project](https://github.com/lklynet/aurral/issues). Report installation, tray, and other desktop-only issues to the [Aurral App tracker](https://github.com/ApolloVulpez/aurral-desktop/issues).
 
 ## Install
 
 ### Windows
 
-Download and run the [Windows x64 installer](https://github.com/ApolloVulpez/aurral-app/releases/download/windows-v0.1.6/Aurral-Setup-0.1.6-win-x64.exe). The default install folder is `C:\Program Files\Aurral` and setup requires administrator approval. Setup creates a Start menu shortcut and offers a desktop shortcut. Select **Open Aurral** at the end of setup. To keep a shortcut on the taskbar, right-click Aurral's taskbar icon while the app is open and select **Pin to taskbar**.
+Download and run the [Windows x64 installer](https://github.com/ApolloVulpez/aurral-desktop/releases/download/windows-v0.1.6/Aurral-Setup-0.1.6-win-x64.exe). The default install folder is `C:\Program Files\Aurral` and setup requires administrator approval. Setup creates a Start menu shortcut and offers a desktop shortcut. Select **Open Aurral** at the end of setup. To keep a shortcut on the taskbar, right-click Aurral's taskbar icon while the app is open and select **Pin to taskbar**.
 
 The installer includes .NET and installs the Microsoft Edge WebView2 Runtime if it is missing. That runtime download requires an Internet connection.
 
 ### macOS
 
-Download the DMG for [Apple Silicon](https://github.com/ApolloVulpez/aurral-app/releases/download/macos-v0.1.7/Aurral-App-0.1.7-macOS-arm64.dmg) or [Intel](https://github.com/ApolloVulpez/aurral-app/releases/download/macos-v0.1.7/Aurral-App-0.1.7-macOS-x64.dmg). Open the disk image and drag **Aurral App** into **Applications**. These builds require macOS 13 or later. They are signed and notarized by Apple.
+Download the DMG for [Apple Silicon](https://github.com/ApolloVulpez/aurral-desktop/releases/download/macos-v0.1.7/Aurral-Desktop-0.1.7-macOS-arm64.dmg) or [Intel](https://github.com/ApolloVulpez/aurral-desktop/releases/download/macos-v0.1.7/Aurral-Desktop-0.1.7-macOS-x64.dmg). Open the disk image and drag **Aurral App** into **Applications**. These builds require macOS 13 or later. They are signed and notarized by Apple.
 
 ### Linux
 
-Download the x64 [Debian package](https://github.com/ApolloVulpez/aurral-app/releases/download/linux-v0.1.10/Aurral-App-0.1.10-linux-amd64.deb), [AppImage](https://github.com/ApolloVulpez/aurral-app/releases/download/linux-v0.1.10/Aurral-App-0.1.10-linux-x86_64.AppImage), or [Flatpak bundle](https://github.com/ApolloVulpez/aurral-app/releases/download/linux-v0.1.10/Aurral-App-0.1.10-linux-x86_64.flatpak).
+Download the x64 [Debian package](https://github.com/ApolloVulpez/aurral-desktop/releases/download/linux-v0.1.10/Aurral-Desktop-0.1.10-linux-amd64.deb), [AppImage](https://github.com/ApolloVulpez/aurral-desktop/releases/download/linux-v0.1.10/Aurral-Desktop-0.1.10-linux-x86_64.AppImage), or [Flatpak bundle](https://github.com/ApolloVulpez/aurral-desktop/releases/download/linux-v0.1.10/Aurral-Desktop-0.1.10-linux-x86_64.flatpak).
 
 Install the `.deb` through your software installer. For the AppImage, allow the file to run as a program in its properties, then open it. For the Flatpak, install the downloaded bundle from the terminal to set up in-app updates. See the [Linux guide](linux/README.md) for the commands.
 
