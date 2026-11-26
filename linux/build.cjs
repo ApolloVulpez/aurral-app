@@ -26,14 +26,14 @@ async function buildLinux() {
   await fs.copyFile(path.join(root, "LICENSE"), path.join(staging, "LICENSE"));
   await fs.writeFile(path.join(staging, "package.json"), JSON.stringify({
     name: "aurral-desktop",
-    productName: "Aurral App",
+    productName: "Aurral Desktop",
     desktopName: "io.github.apollovulpez.aurral-desktop.desktop",
     version,
     dependencies,
     main: "main.cjs",
     description: "A desktop front end for your Aurral server.",
     homepage: "https://github.com/ApolloVulpez/aurral-desktop",
-    author: "Aurral App Contributors",
+    author: "Aurral Desktop Contributors",
     license: "MIT",
   }, null, 2));
 
@@ -42,7 +42,7 @@ async function buildLinux() {
     publish: "never",
     config: {
       appId: "io.github.apollovulpez.aurral-desktop",
-      productName: "Aurral App",
+      productName: "Aurral Desktop",
       electronVersion,
       directories: { app: staging, output, buildResources: path.join(shared, "assets") },
       files: ["*.cjs", "*.js", "*.css", "*.html", "assets/**", "LICENSE", "package.json"],
@@ -61,11 +61,11 @@ async function buildLinux() {
         syncDesktopName: true,
         category: "AudioVideo",
         icon: path.join(__dirname, "icons"),
-        maintainer: "Aurral App Contributors",
+        maintainer: "Aurral Desktop Contributors",
         artifactName: "Aurral-Desktop-${version}-linux-${arch}.${ext}",
         desktop: {
           entry: {
-            Name: "Aurral App",
+            Name: "Aurral Desktop",
             Comment: "Connect to your Aurral music server",
             Categories: "AudioVideo;Audio;Player;",
           },
@@ -77,9 +77,9 @@ async function buildLinux() {
         desktop: {
           entry: { Actions: "PreviousTrack;PlayPause;NextTrack;" },
           desktopActions: {
-            PreviousTrack: { Name: "Previous Track", Exec: '"/opt/Aurral App/aurral-desktop" --aurral-playback=previoustrack' },
-            PlayPause: { Name: "Play/Pause", Exec: '"/opt/Aurral App/aurral-desktop" --aurral-playback=toggle' },
-            NextTrack: { Name: "Next Track", Exec: '"/opt/Aurral App/aurral-desktop" --aurral-playback=nexttrack' },
+            PreviousTrack: { Name: "Previous Track", Exec: '"/opt/Aurral Desktop/aurral-desktop" --aurral-playback=previoustrack' },
+            PlayPause: { Name: "Play/Pause", Exec: '"/opt/Aurral Desktop/aurral-desktop" --aurral-playback=toggle' },
+            NextTrack: { Name: "Next Track", Exec: '"/opt/Aurral Desktop/aurral-desktop" --aurral-playback=nexttrack' },
           },
         },
       },

@@ -3,10 +3,10 @@
   <id>io.github.apollovulpez.aurral-desktop</id>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>MIT</project_license>
-  <name>Aurral App</name>
+  <name>Aurral Desktop</name>
   <summary>Connect to your Aurral music server</summary>
   <developer id="io.github.apollovulpez">
-    <name>Aurral App Contributors</name>
+    <name>Aurral Desktop Contributors</name>
   </developer>
   <description>
     <p>Browse and play music from your Aurral server in a desktop window. Control playback from the system tray and show your current track on Discord.</p>

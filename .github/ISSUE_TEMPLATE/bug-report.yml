@@ -1,5 +1,5 @@
 name: Bug report
-description: Report broken behavior, regressions, or crashes in Aurral App.
+description: Report broken behavior, regressions, or crashes in Aurral Desktop.
 title: "[Bug]: "
 body:
   - type: markdown
@@ -46,7 +46,7 @@ body:
   - type: input
     id: app-version
     attributes:
-      label: Aurral App version
+      label: Aurral Desktop version
       description: Use the version from the installer filename or release page. For a build from source, give the commit if you know it.
       placeholder: '0.1.4'
     validations:
@@ -58,7 +58,7 @@ body:
       label: Steps to reproduce
       description: Give the shortest sequence that reproduces the problem.
       placeholder: |
-        1. Open Aurral App
+        1. Open Aurral Desktop
         2. …
         3. …
     validations:
@@ -68,7 +68,7 @@ body:
     id: expected
     attributes:
       label: Expected behavior
-      description: What did you expect Aurral App to do?
+      description: What did you expect Aurral Desktop to do?
     validations:
       required: true
 
@@ -76,7 +76,7 @@ body:
     id: actual
     attributes:
       label: Actual behavior
-      description: What did Aurral App do instead?
+      description: What did Aurral Desktop do instead?
     validations:
       required: true
 
@@ -85,7 +85,7 @@ body:
     attributes:
       label: Does the same problem happen in a regular browser?
       options:
-        - Only in Aurral App
+        - Only in Aurral Desktop
         - Also in a browser
         - Haven't checked
         - Doesn't apply

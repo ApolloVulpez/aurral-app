@@ -271,21 +271,21 @@ internal sealed class MainWindow : Form
             if (IsDisposed || !install) return;
             if (update is null)
             {
-                MessageBox.Show(this, "Aurral App is up to date.", "App updates", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show(this, "Aurral Desktop is up to date.", "App updates", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
 
             var installed = AppUpdates.IsInstalled();
-            if (!installed && MessageBox.Show(this, $"Open the Windows installer for Aurral App {update.Version}?",
+            if (!installed && MessageBox.Show(this, $"Open the Windows installer for Aurral Desktop {update.Version}?",
                 "App updates", MessageBoxButtons.OKCancel, MessageBoxIcon.Information) != DialogResult.OK) return;
 
-            SetUpdateLabel($"Installing Aurral App {update.Version}…");
+            SetUpdateLabel($"Installing Aurral Desktop {update.Version}…");
             await AppUpdates.InstallAsync(update, installed);
         }
         catch (Exception error)
         {
             if (install && !IsDisposed)
-                MessageBox.Show(this, $"Aurral App couldn't finish the update.\n\n{error.Message}",
+                MessageBox.Show(this, $"Aurral Desktop couldn't finish the update.\n\n{error.Message}",
                     "App updates", MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
         finally
@@ -294,7 +294,7 @@ internal sealed class MainWindow : Form
             {
                 captionBar.UpdateButton.Enabled = true;
                 captionBar.UpdateButton.ForeColor = update is null ? Color.Gray : Color.White;
-                SetUpdateLabel(update is null ? "Check for app updates" : $"Update to Aurral App {update.Version}");
+                SetUpdateLabel(update is null ? "Check for app updates" : $"Update to Aurral Desktop {update.Version}");
             }
         }
     }

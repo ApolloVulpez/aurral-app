@@ -3,6 +3,6 @@
 <plist version="1.0">
 <dict>
   <key>NSLocalNetworkUsageDescription</key>
-  <string>Aurral App connects to your Aurral server and plays music from it. Your server may be on your local network.</string>
+  <string>Aurral Desktop connects to your Aurral server and plays music from it. Your server may be on your local network.</string>
 </dict>
 </plist>

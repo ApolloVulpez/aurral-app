@@ -10,7 +10,7 @@ const { promisify } = require("node:util");
 const run = promisify(execFile);
 const repository = "ApolloVulpez/aurral-desktop";
 const releaseApi = `https://api.github.com/repos/${repository}/releases`;
-const bundleName = "Aurral App.app";
+const bundleName = "Aurral Desktop.app";
 const bundleId = "io.github.apollovulpez.aurral-desktop";
 
 function compareVersions(left, right) {

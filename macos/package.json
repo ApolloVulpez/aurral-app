@@ -1,6 +1,6 @@
 {
   "name": "aurral-desktop",
-  "productName": "Aurral App",
+  "productName": "Aurral Desktop",
   "version": "0.1.7",
   "private": true,
   "description": "A desktop front end for your Aurral server.",

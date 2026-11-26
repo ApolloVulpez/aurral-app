@@ -1,4 +1,4 @@
-# Aurral App for Linux
+# Aurral Desktop for Linux
 
 Download the x64 [Debian package](https://github.com/ApolloVulpez/aurral-desktop/releases/download/linux-v0.1.10/Aurral-Desktop-0.1.10-linux-amd64.deb), [AppImage](https://github.com/ApolloVulpez/aurral-desktop/releases/download/linux-v0.1.10/Aurral-Desktop-0.1.10-linux-x86_64.AppImage), or [Flatpak bundle](https://github.com/ApolloVulpez/aurral-desktop/releases/download/linux-v0.1.10/Aurral-Desktop-0.1.10-linux-x86_64.flatpak) from the [Linux release](https://github.com/ApolloVulpez/aurral-desktop/releases/tag/linux-v0.1.10).
 
@@ -18,7 +18,7 @@ Install the package through your software installer, or run this command in the 
 sudo apt install ./Aurral-Desktop-0.1.10-linux-amd64.deb
 ```
 
-Open **Aurral App** from your application menu.
+Open **Aurral Desktop** from your application menu.
 
 ## Run the AppImage
 
@@ -50,19 +50,19 @@ flatpak install --user --bundle ./Aurral-Desktop-0.1.10-linux-x86_64.flatpak
 
 For a system-wide installation, use `--system` in both commands.
 
-The first install may download the Freedesktop runtime from Flathub. Open **Aurral App** from your application menu. Click the title-bar update button when it lights up. Flatpak installs the update and Aurral prompts you to reopen it.
+The first install may download the Freedesktop runtime from Flathub. Open **Aurral Desktop** from your application menu. Click the title-bar update button when it lights up. Flatpak installs the update and Aurral prompts you to reopen it.
 
 ## Connect and use Aurral
 
-Enter your Aurral server URL, then sign in. Aurral App remembers the URL and session.
+Enter your Aurral server URL, then sign in. Aurral Desktop remembers the URL and session.
 
 Open the **Settings** menu beside the title-bar update button to change servers. You can also open it with **Ctrl + ,** or by tapping **Alt**. The tray menu has **Show Aurral**, **Stop / Play**, **Previous**, **Next**, and **Quit**.
 
 During playback, KDE Plasma can show **Previous**, **Play/Pause**, and **Next** in the taskbar preview. Other desktops, including GNOME media extensions, may show the controls and the current cover art in their system media panel. The Debian and Flatpak packages also add those three actions to the Aurral launcher’s right-click menu.
 
-Closing the window keeps playback running. Turn off **Settings → Minimize to Tray** if you want closing the window to quit. Desktop environments control whether a tray icon appears. If it is hidden, launching Aurral App again restores the existing window.
+Closing the window keeps playback running. Turn off **Settings → Minimize to Tray** if you want closing the window to quit. Desktop environments control whether a tray icon appears. If it is hidden, launching Aurral Desktop again restores the existing window.
 
-Aurral App displays your server's web interface. Report server and web interface issues to the [main Aurral project](https://github.com/lklynet/aurral/issues). Report Linux packaging, tray, and other desktop issues to the [Aurral App tracker](https://github.com/ApolloVulpez/aurral-desktop/issues).
+Aurral Desktop displays your server's web interface. Report server and web interface issues to the [main Aurral project](https://github.com/lklynet/aurral/issues). Report Linux packaging, tray, and other desktop issues to the [Aurral Desktop tracker](https://github.com/ApolloVulpez/aurral-desktop/issues).
 
 ## Build locally
 

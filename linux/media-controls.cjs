@@ -88,7 +88,7 @@ class MediaPlayer extends Interface {
   CanQuit = false;
   CanRaise = true;
   HasTrackList = false;
-  Identity = "Aurral App";
+  Identity = "Aurral Desktop";
   SupportedUriSchemes = [];
   SupportedMimeTypes = [];
 

@@ -1,7 +1,7 @@
 <div align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="assets/readme-dark.svg" />
-    <img src="assets/readme-light.svg" width="690" alt="Aurral App" />
+    <img src="assets/readme-light.svg" width="690" alt="Aurral Desktop" />
   </picture>
 </div>
 
@@ -21,7 +21,7 @@
 </p>
 
 > [!IMPORTANT]
-> Aurral App requires a running Aurral server and displays that server's web interface. Report server bugs and issues you can also reproduce in a browser to the [main Aurral project](https://github.com/lklynet/aurral/issues). Report installation, tray, and other desktop-only issues to the [Aurral App tracker](https://github.com/ApolloVulpez/aurral-desktop/issues).
+> Aurral Desktop requires a running Aurral server and displays that server's web interface. Report server bugs and issues you can also reproduce in a browser to the [main Aurral project](https://github.com/lklynet/aurral/issues). Report installation, tray, and other desktop-only issues to the [Aurral Desktop tracker](https://github.com/ApolloVulpez/aurral-desktop/issues).
 
 ## Install
 
@@ -33,7 +33,7 @@ The installer includes .NET and installs the Microsoft Edge WebView2 Runtime if 
 
 ### macOS
 
-Download the DMG for [Apple Silicon](https://github.com/ApolloVulpez/aurral-desktop/releases/download/macos-v0.1.7/Aurral-Desktop-0.1.7-macOS-arm64.dmg) or [Intel](https://github.com/ApolloVulpez/aurral-desktop/releases/download/macos-v0.1.7/Aurral-Desktop-0.1.7-macOS-x64.dmg). Open the disk image and drag **Aurral App** into **Applications**. These builds require macOS 13 or later. They are signed and notarized by Apple.
+Download the DMG for [Apple Silicon](https://github.com/ApolloVulpez/aurral-desktop/releases/download/macos-v0.1.7/Aurral-Desktop-0.1.7-macOS-arm64.dmg) or [Intel](https://github.com/ApolloVulpez/aurral-desktop/releases/download/macos-v0.1.7/Aurral-Desktop-0.1.7-macOS-x64.dmg). Open the disk image and drag **Aurral Desktop** into **Applications**. These builds require macOS 13 or later. They are signed and notarized by Apple.
 
 ### Linux
 
@@ -49,9 +49,9 @@ Open the **Settings** menu beside the title-bar update button to change servers 
 
 - **On Windows**, hover over Aurral on the taskbar for **Previous**, **Play/Pause**, and **Next**. Right-click the Aurral icon in the notification area to open the tray menu.
 - **On macOS**, right-click Aurral in the Dock for **Previous Track**, **Play/Pause**, and **Next Track**. You can also open playback controls from the Aurral icon near the clock.
-- **On Linux**, use the Aurral tray icon for playback controls. If your desktop hides the tray icon, launching Aurral App again restores the existing window.
+- **On Linux**, use the Aurral tray icon for playback controls. If your desktop hides the tray icon, launching Aurral Desktop again restores the existing window.
 
-Closing the window keeps playback running by default. Launch Aurral App again or choose **Show Aurral** from the tray or menu-bar icon to bring back the existing window. The tray menu also offers **Stop / Play**, **Previous**, **Next**, and **Quit**. **Stop** pauses the current track so **Play** can resume it. Sign-in, API calls, and streaming go directly to your server.
+Closing the window keeps playback running by default. Launch Aurral Desktop again or choose **Show Aurral** from the tray or menu-bar icon to bring back the existing window. The tray menu also offers **Stop / Play**, **Previous**, **Next**, and **Quit**. **Stop** pauses the current track so **Play** can resume it. Sign-in, API calls, and streaming go directly to your server.
 
 Use the title-bar arrows to go back and forward. On macOS, use **⌘ + [** and **⌘ + ]**. On Linux, use **Alt + ←** and **Alt + →**.
 
@@ -63,7 +63,7 @@ Turn on **Share Track Details on Discord** separately to add a **View on Aurral*
 
 ## App updates
 
-Click **Changelog** between Forward and Update to see the release notes for your installed version. Aurral App checks GitHub for updates on startup. The download icon turns white when a newer compatible release is available and stays grey otherwise. Click it to check for and install the update. Windows and `.deb` installations can prompt for administrator approval. Flatpak installations use the signed update repository and prompt you to reopen Aurral after installation. Updates keep your server settings and sign-in. If the installation needs to be finished manually, the app opens the downloaded package or shows its location.
+Click **Changelog** between Forward and Update to see the release notes for your installed version. Aurral Desktop checks GitHub for updates on startup. The download icon turns white when a newer compatible release is available and stays grey otherwise. Click it to check for and install the update. Windows and `.deb` installations can prompt for administrator approval. Flatpak installations use the signed update repository and prompt you to reopen Aurral after installation. Updates keep your server settings and sign-in. If the installation needs to be finished manually, the app opens the downloaded package or shows its location.
 
 Windows, macOS, and Linux use independent version numbers. Publish stable releases with the matching `windows-vMAJOR.MINOR.PATCH`, `macos-vMAJOR.MINOR.PATCH`, or `linux-vMAJOR.MINOR.PATCH` tag and keep the filenames produced by the build scripts.
 

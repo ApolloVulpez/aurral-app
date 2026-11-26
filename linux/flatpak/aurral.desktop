@@ -1,6 +1,6 @@
 [Desktop Entry]
 Type=Application
-Name=Aurral App
+Name=Aurral Desktop
 Comment=Connect to your Aurral music server
 Exec=aurral-desktop
 Icon=io.github.apollovulpez.aurral-desktop

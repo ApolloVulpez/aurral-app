@@ -1,5 +1,5 @@
 name: Feature request
-description: Suggest a new feature or an improvement to Aurral App.
+description: Suggest a new feature or an improvement to Aurral Desktop.
 title: "[Feature request]: "
 body:
   - type: markdown
@@ -46,7 +46,7 @@ body:
   - type: textarea
     id: proposal
     attributes:
-      label: What would you like Aurral App to do?
+      label: What would you like Aurral Desktop to do?
       description: Describe the behavior you want. Include where it would appear and how you'd use it.
     validations:
       required: true

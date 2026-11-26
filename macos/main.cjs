@@ -5,6 +5,18 @@ const { checkForUpdate, readChangelog, installUpdate, installFlatpakRepositoryUp
 const { DiscordPresence } = require("./discord-presence.cjs");
 const { DiscordArtwork } = require("./discord-artwork.cjs");
 
+// Move settings from the folder used before the app was renamed. This runs before
+// anything creates the new folder, including the single-instance lock.
+try {
+  const previousData = path.join(app.getPath("appData"), "Aurral App");
+  const userData = app.getPath("userData");
+  if (previousData !== userData && !fs.existsSync(userData) && fs.existsSync(previousData)) {
+    fs.renameSync(previousData, userData);
+  }
+} catch (error) {
+  console.warn("Aurral couldn't move settings from the previous app folder.", error);
+}
+
 const discordActivityScript = fs.readFileSync(path.join(__dirname, "discord-activity.js"), "utf8").trim();
 const externalLinksScript = fs.readFileSync(path.join(__dirname, "external-links.js"), "utf8").trim();
 const discord = new DiscordPresence(fs.readFileSync(path.join(__dirname, "assets", "discord-application-id.txt"), "utf8").trim());
@@ -74,7 +86,7 @@ function saveSettings() {
     fs.writeFileSync(pendingFile, JSON.stringify(settings), { mode: 0o600 });
     fs.renameSync(pendingFile, settingsFile);
   } catch {
-    dialog.showErrorBox("Aurral App", "Aurral couldn't save its settings.");
+    dialog.showErrorBox("Aurral Desktop", "Aurral couldn't save its settings.");
   }
 }
 
@@ -199,7 +211,7 @@ function sendUpdateStatus(contents = player?.webContents) {
   contents.send("aurral:update-state", {
     busy: Boolean(updateStatus),
     available: Boolean(availableUpdate),
-    label: updateStatus || (availableUpdate ? `Update to Aurral App ${availableUpdate.version}` : "Check for app updates"),
+    label: updateStatus || (availableUpdate ? `Update to Aurral Desktop ${availableUpdate.version}` : "Check for app updates"),
   });
 }
 
@@ -247,22 +259,22 @@ async function checkForAppUpdate(install) {
     availableUpdate = await checkForUpdate({ version: app.getVersion(), platform, arch: process.arch, appImage, flatpak: isFlatpak });
     if (!install || quitting) return;
     if (!availableUpdate) {
-      await showUpdateMessage("Aurral App is up to date.");
+      await showUpdateMessage("Aurral Desktop is up to date.");
       return;
     }
 
-    updateStatus = `Installing Aurral App ${availableUpdate.version}…`;
+    updateStatus = `Installing Aurral Desktop ${availableUpdate.version}…`;
     sendUpdateStatus();
     if (isFlatpak) {
       const installed = await installFlatpakRepositoryUpdate(progress => {
-        updateStatus = `Installing Aurral App ${availableUpdate.version}… ${progress}%`;
+        updateStatus = `Installing Aurral Desktop ${availableUpdate.version}… ${progress}%`;
         sendUpdateStatus();
       });
       if (quitting) return;
       if (!installed) throw new Error("Flatpak has no update ready for this installation.");
 
       availableUpdate = null;
-      await showUpdateMessage("Aurral App update installed.", "Quit and reopen Aurral App to use the new version.");
+      await showUpdateMessage("Aurral Desktop update installed.", "Quit and reopen Aurral Desktop to use the new version.");
       return;
     }
 
@@ -273,14 +285,14 @@ async function checkForAppUpdate(install) {
     if (result.executable) restartAfterUpdate(result.executable, appImage);
     if (result.packageFile) {
       if (appImage || await shell.openPath(result.packageFile)) shell.showItemInFolder(result.packageFile);
-      await showUpdateMessage(`Aurral App ${availableUpdate.version} downloaded.`, appImage
+      await showUpdateMessage(`Aurral Desktop ${availableUpdate.version} downloaded.`, appImage
         ? "Replace your current AppImage with the downloaded file."
         : platform === "darwin"
-          ? "Open the downloaded disk image and drag Aurral App into Applications."
+          ? "Open the downloaded disk image and drag Aurral Desktop into Applications."
           : "Open the downloaded package in your software installer to finish the update.");
     }
   } catch (error) {
-    if (install && !quitting) await showUpdateMessage("Aurral App couldn't finish the update.", error.message, "warning");
+    if (install && !quitting) await showUpdateMessage("Aurral Desktop couldn't finish the update.", error.message, "warning");
   } finally {
     updateStatus = "";
     sendUpdateStatus();
@@ -500,7 +512,7 @@ async function openServer(server) {
   let window;
   try {
     window = new BrowserWindow({
-      title: "Aurral App",
+      title: "Aurral Desktop",
       width: 1200,
       height: 800,
       minWidth: 520,
@@ -634,7 +646,7 @@ function setAppMenu() {
   }
   Menu.setApplicationMenu(Menu.buildFromTemplate([
     {
-      label: "Aurral App",
+      label: "Aurral Desktop",
       submenu: [
         { label: "Show Aurral", click: showAurral },
         { label: "Settings…", accelerator: "Command+,", click: requestSettings },
@@ -691,7 +703,7 @@ if (!app.requestSingleInstanceLock({ playbackAction: launcherPlaybackAction }) |
     applyDiscordSettings();
     void checkForAppUpdate(false);
     tray = new Tray(path.join(__dirname, "assets", isLinux ? "icon.png" : "TrayTemplate.png"));
-    tray.setToolTip("Aurral App");
+    tray.setToolTip("Aurral Desktop");
     if (!isLinux) {
       tray.on("click", showTrayMenu);
       tray.on("right-click", showTrayMenu);
@@ -708,7 +720,7 @@ if (!app.requestSingleInstanceLock({ playbackAction: launcherPlaybackAction }) |
     const server = parseServer(settings.serverUrl);
     if ((!server || await openServer(server)) && !quitting) openSetup();
   }).catch(error => {
-    dialog.showErrorBox("Aurral App", `Aurral couldn't start.\n\n${error.message}`);
+    dialog.showErrorBox("Aurral Desktop", `Aurral couldn't start.\n\n${error.message}`);
     app.quit();
   });
 }
