@@ -20,12 +20,17 @@
   <a href="https://discord.gg/cpPYfgVURJ">Discord</a>
 </p>
 
-<p align="center">
-  <img src="assets/screenshots/discover.webp" width="900" alt="Aurral Desktop on Windows showing the Discover page, the playlist sidebar and the player bar" />
-</p>
 
 > [!IMPORTANT]
 > Aurral Desktop requires a running Aurral server and displays that server's web interface. Report server bugs and issues you can also reproduce in a browser to the [main Aurral project](https://github.com/lklynet/aurral/issues). Report installation, tray, and other desktop-only issues to the [Aurral Desktop tracker](https://github.com/ApolloVulpez/aurral-desktop/issues).
+
+
+<p align="center">
+  <img src="assets/screenshots/discover.webp" width="900" alt="Aurral Desktop on Windows showing the Discover page, the playlist sidebar and the player bar" />
+</p>
+<p align="center">
+  <img src="assets/screenshots/settings.png" width="720" alt="Aurral's Appearance settings open in Aurral Desktop, with color scheme and theme options" />
+</p>
 
 ## Install
 
@@ -57,9 +62,7 @@ Open the **Settings** menu beside the title-bar update button to change servers 
 
 Closing the window keeps playback running by default. Launch Aurral Desktop again or choose **Show Aurral** from the tray or menu-bar icon to bring back the existing window. The tray menu also offers **Stop / Play**, **Previous**, **Next**, and **Quit**. **Stop** pauses the current track so **Play** can resume it. Sign-in, API calls, and streaming go directly to your server.
 
-<p align="center">
-  <img src="assets/screenshots/settings.png" width="720" alt="Aurral's Appearance settings open in Aurral Desktop, with color scheme and theme options" />
-</p>
+
 
 Use the title-bar arrows to go back and forward. On macOS, use **⌘ + [** and **⌘ + ]**. On Linux, use **Alt + ←** and **Alt + →**.
 
