@@ -5,16 +5,18 @@ const { checkForUpdate, readChangelog, installUpdate, installFlatpakRepositoryUp
 const { DiscordPresence } = require("./discord-presence.cjs");
 const { DiscordArtwork } = require("./discord-artwork.cjs");
 
-// Move settings from the folder used before the app was renamed. This runs before
-// anything creates the new folder, including the single-instance lock.
+// Keep using the folder from before the app was renamed, so existing settings and
+// sign-ins carry over. Electron creates the new folder before this runs, so check
+// for saved settings rather than for the folder.
 try {
   const previousData = path.join(app.getPath("appData"), "Aurral App");
   const userData = app.getPath("userData");
-  if (previousData !== userData && !fs.existsSync(userData) && fs.existsSync(previousData)) {
-    fs.renameSync(previousData, userData);
+  if (previousData !== userData && !fs.existsSync(path.join(userData, "settings.json")) &&
+      fs.existsSync(path.join(previousData, "settings.json"))) {
+    app.setPath("userData", previousData);
   }
 } catch (error) {
-  console.warn("Aurral couldn't move settings from the previous app folder.", error);
+  console.warn("Aurral couldn't check the previous app folder.", error);
 }
 
 const discordActivityScript = fs.readFileSync(path.join(__dirname, "discord-activity.js"), "utf8").trim();
