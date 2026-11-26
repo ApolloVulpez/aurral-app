@@ -77,7 +77,7 @@ Turn on **Share Track Details on Discord** separately to add a **View on Aurral*
 Click **Changelog** between Forward and Update to see the release notes for your installed version.
 
 <p align="center">
-  <img src="assets/screenshots/changelog.webp" width="720" alt="The Changelog popup listing the release notes for the installed version" />
+  <img src="assets/screenshots/changelog.webp" width="1080" alt="The Changelog popup listing the release notes for the installed version" />
 </p>
 
 Aurral Desktop checks GitHub for updates on startup. The download icon turns white when a newer compatible release is available and stays grey otherwise. Click it to check for and install the update. Windows and `.deb` installations can prompt for administrator approval. Flatpak installations use the signed update repository and prompt you to reopen Aurral after installation. Updates keep your server settings and sign-in. If the installation needs to be finished manually, the app opens the downloaded package or shows its location.
