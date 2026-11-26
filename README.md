@@ -1,7 +1,7 @@
 <div align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="assets/readme-dark.svg" />
-    <img src="assets/readme-light.svg" width="740" alt="Aurral Desktop" />
+    <source media="(prefers-color-scheme: dark)" srcset="assets/dark-readme.svg" />
+    <img src="assets/light-readme.svg" width="740" alt="Aurral Desktop" />
   </picture>
 </div>
 
