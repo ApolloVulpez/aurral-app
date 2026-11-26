@@ -26,10 +26,10 @@
 
 
 <p align="center">
-  <img src="assets/screenshots/discover.webp" width="900" alt="Aurral Desktop on Windows showing the Discover page, the playlist sidebar and the player bar" />
+  <img src="assets/screenshots/discover.webp" width="1080" alt="Aurral Desktop on Windows showing the Discover page, the playlist sidebar and the player bar" />
 </p>
 <p align="center">
-  <img src="assets/screenshots/settings.png" width="720" alt="Aurral's Appearance settings open in Aurral Desktop, with color scheme and theme options" />
+  <img src="assets/screenshots/settings.png" width="1080" alt="Aurral's Appearance settings open in Aurral Desktop, with color scheme and theme options" />
 </p>
 
 ## Install
